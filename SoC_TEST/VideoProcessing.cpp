@@ -22,7 +22,7 @@ CWebCam::~CWebCam()
 bool CWebCam::StartCam(CWnd* wnd, int nWidth, int nHeight, BITMAPINFO& bmpInfo)
 {
 	// 캡쳐 영상을 출력할 윈도우의 크기 및 위치 조절
-	m_hCam = capCreateCaptureWindow("Cam Capture", WS_CHILD|WS_VISIBLE, 
+	m_hCam = capCreateCaptureWindow("Cam Capture", WS_CHILD|WS_VISIBLE,
 									0, 0, nWidth, nHeight, wnd->m_hWnd, NULL);
 
 	if (!capDriverConnect(m_hCam, 0))

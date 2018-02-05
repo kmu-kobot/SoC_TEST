@@ -43,7 +43,7 @@ protected:
 
 void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24);
 
-void GaussianBlur(CByteImage& src, CByteImage& dst, double radius);
+//void GaussianBlur(CByteImage& src, CByteImage& dst, double radius);
 
 int* boxesForGauss(double sigma, int n);
 void gaussBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);

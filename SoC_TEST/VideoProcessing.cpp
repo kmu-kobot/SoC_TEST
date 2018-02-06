@@ -119,82 +119,82 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 
 #define evne(x) (x % 2 == 0 ? x + 1 : x)
 
-//void GaussianBlur(CByteImage& src, CByteImage& dst, double radius)
-//{
-//	int nWidth = src.GetWidth();
-//	int nHeight = src.GetHeight();
-//	int nChnnl = src.GetChannel();
-//	int nWStep = src.GetWStep();
-//	BYTE* pSrc = src.GetPtr();
-//	BYTE* pDst = dst.GetPtr();
-//
-//	// 1차원 가우스 마스크 생성
-//	int nHalf = max((radius * 6 - 1) / 2, 1);
-//	nHalf = evne(nHalf);
-//
-//	int nMeanSize = nHalf * 2 + 1;
-//
-//	double* m_bufGss = new double[evne(nHalf * 2) * 2 + 1];
-//
-//	for (int n = 0; n <= nHalf; n++)
-//	{
-//		m_bufGss[nHalf - n] = m_bufGss[nHalf + n]
-//			= exp(-n * n / (2 * radius*radius));
-//	}
-//
-//	int r, c, l;
-//	CDoubleImage tmpConv(nWidth, nHeight, nChnnl);
-//	double* pTmp = tmpConv.GetPtr();
-//
-//	// 가로 방향 회선
-//	for (r = 0; r<nHeight; r++) // 행 이동
-//	{
-//		for (c = 0; c<nWidth; c++) // 열 이동
-//		{
-//			for (l = 0; l<nChnnl; l++) // 채널 이동
-//			{
-//				double dSum = 0; // (마스크*픽셀) 값의 합
-//				double dGss = 0; // 마스크 값의 합
-//				for (int n = -nHalf; n <= nHalf; n++)
-//				{
-//					int px = c + n;
-//
-//					if (px >= 0 && px<nWidth)
-//					{
-//						dSum += (pSrc[nWStep * r + px + l] * m_bufGss[nHalf + n]);
-//						dGss += m_bufGss[nHalf + n];
-//					}
-//				}
-//				pTmp[nWStep * r + c + l] = dSum / dGss;
-//			} // 채널 이동 끝
-//		} // 열 이동 끝
-//	} // 행 이동 끝
-//
-//	  // 세로 방향 회선
-//	for (r = 0; r<nHeight; r++) // 행 이동
-//	{
-//		for (c = 0; c<nWidth; c++) // 열 이동
-//		{
-//			for (l = 0; l<nChnnl; l++) // 채널 이동
-//			{
-//				double dSum = 0; // 픽셀 값의 합
-//				double dGss = 0; // 마스크 값의 합
-//				for (int n = -nHalf; n <= nHalf; n++)
-//				{
-//					int py = r + n;
-//
-//					if (py >= 0 && py<nHeight)
-//					{
-//						int absN = abs(n);
-//						dSum += pTmp[nWStep*py + nChnnl * c + l] * m_bufGss[nHalf + n];
-//						dGss += m_bufGss[nHalf + n];
-//					}
-//				}
-//				pDst[nWStep*r + nChnnl * c + l] = (BYTE)(dSum / dGss);
-//			} // 채널 이동 끝
-//		} // 열 이동 끝
-//	} // 행 이동 끝
-//}
+void GaussianBlur(CByteImage& src, CByteImage& dst, double radius)
+{
+	int nWidth = src.GetWidth();
+	int nHeight = src.GetHeight();
+	int nChnnl = src.GetChannel();
+	int nWStep = src.GetWStep();
+	BYTE* pSrc = src.GetPtr();
+	BYTE* pDst = dst.GetPtr();
+
+	// 1차원 가우스 마스크 생성
+	int nHalf = max((radius * 6 - 1) / 2, 1);
+	nHalf = evne(nHalf);
+
+	int nMeanSize = nHalf * 2 + 1;
+
+	double* m_bufGss = new double[evne(nHalf * 2) * 2 + 1];
+
+	for (int n = 0; n <= nHalf; n++)
+	{
+		m_bufGss[nHalf - n] = m_bufGss[nHalf + n]
+			= exp(-n * n / (2 * radius*radius));
+	}
+
+	int r, c, l;
+	CDoubleImage tmpConv(nWidth, nHeight, nChnnl);
+	double* pTmp = tmpConv.GetPtr();
+
+	// 가로 방향 회선
+	for (r = 0; r<nHeight; r++) // 행 이동
+	{
+		for (c = 0; c<nWidth; c++) // 열 이동
+		{
+			for (l = 0; l<nChnnl; l++) // 채널 이동
+			{
+				double dSum = 0; // (마스크*픽셀) 값의 합
+				double dGss = 0; // 마스크 값의 합
+				for (int n = -nHalf; n <= nHalf; n++)
+				{
+					int px = c + n;
+
+					if (px >= 0 && px<nWidth)
+					{
+						dSum += (pSrc[nWStep * r + px + l] * m_bufGss[nHalf + n]);
+						dGss += m_bufGss[nHalf + n];
+					}
+				}
+				pTmp[nWStep * r + c + l] = dSum / dGss;
+			} // 채널 이동 끝
+		} // 열 이동 끝
+	} // 행 이동 끝
+
+	  // 세로 방향 회선
+	for (r = 0; r<nHeight; r++) // 행 이동
+	{
+		for (c = 0; c<nWidth; c++) // 열 이동
+		{
+			for (l = 0; l<nChnnl; l++) // 채널 이동
+			{
+				double dSum = 0; // 픽셀 값의 합
+				double dGss = 0; // 마스크 값의 합
+				for (int n = -nHalf; n <= nHalf; n++)
+				{
+					int py = r + n;
+
+					if (py >= 0 && py<nHeight)
+					{
+						int absN = abs(n);
+						dSum += pTmp[nWStep*py + nChnnl * c + l] * m_bufGss[nHalf + n];
+						dGss += m_bufGss[nHalf + n];
+					}
+				}
+				pDst[nWStep*r + nChnnl * c + l] = (BYTE)(dSum / dGss);
+			} // 채널 이동 끝
+		} // 열 이동 끝
+	} // 행 이동 끝
+}
 
 
  int* boxesForGauss(double sigma, int n)  // standard deviation, number of boxes
@@ -217,11 +217,10 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 
 void gaussBlur(CByteImage& src, CByteImage& dst, int width, int height, double radius)
 {
-	CByteImage temp = CByteImage(src.GetWidth(), src.GetHeight());
 	int* bxs = boxesForGauss(radius, 3);
-	boxBlur(src, dst, width, height, (bxs[0] - 1) / 2);
-	boxBlur(dst, temp, width, height, (bxs[1] - 1) / 2);
-	boxBlur(temp, dst, width, height, (bxs[2] - 1) / 2);
+	boxBlur(src, dst, width, height, 3/*(bxs[0] - 1) / 2*/);
+	boxBlur(dst, src, width, height, 3/*(bxs[1] - 1) / 2*/);
+	boxBlur(src, dst, width, height, 3/*(bxs[2] - 1) / 2*/);
 }
 
 void boxBlur(CByteImage& src, CByteImage& dst, int width, int height, double radius)
@@ -250,6 +249,7 @@ void boxBlurH(CByteImage& src, CByteImage& dst, int width, int height, double ra
 		int ti = i * nWStep;
 		int li = ti;
 		int ri = ti + radius;
+
 		int fv = pSrc[ti];
 		int lv = pSrc[ti + width - 1];
 		double val = (radius + 1)*fv;

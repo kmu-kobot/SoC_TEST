@@ -54,7 +54,7 @@ bool CWebCam::StartCam(CWnd* wnd, int nWidth, int nHeight, BITMAPINFO& bmpInfo)
 	}
 
 	capOverlay	  (m_hCam,TRUE);
-	capPreviewRate(m_hCam, 500);
+	capPreviewRate(m_hCam, 30);
 	capPreview	  (m_hCam, TRUE);
 	
 	return true;

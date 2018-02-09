@@ -50,3 +50,7 @@ void gaussBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
 void boxBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
 void boxBlurH(CByteImage& src, CByteImage& dst, int w, int h, double r);
 void boxBlurT(CByteImage& src, CByteImage& dst, int w, int h, double r);
+void gaussBlur(CByteImage& src, CByteImage& dst, double sigma);
+void boxBlur(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius);
+void boxBlurH(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius);
+void boxBlurT(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius);

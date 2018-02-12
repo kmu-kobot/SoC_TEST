@@ -330,16 +330,19 @@ void gaussBlur(CByteImage& src, CByteImage& dst, double sigma)
 	BYTE* pSrc = src.GetPtr();
 	BYTE* pDst = dst.GetPtr();
 	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[0] - 1) / 2);
-	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[1] - 1) / 2);
+	boxBlur(pDst, pSrc, nWidth, nHeight, nWStep, (bxs[1] - 1) / 2);
 	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[2] - 1) / 2);
-	memcpy(pDst, pSrc, nHeight * nWStep);
 }
+
 
 void boxBlur(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius)
 {
-	boxBlurH(src, dst, width, height, wstep, radius);
-	boxBlurT(dst, src, width, height, wstep, radius);
+	memcpy(dst, src, wstep*height);
+	boxBlurH(dst, src, width, height, wstep, radius);
+	boxBlurT(src, dst, width, height, wstep, radius);
 }
+
+
 
 void boxBlurH(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius)
 {
@@ -397,7 +400,7 @@ void boxBlurT(BYTE* src, BYTE* dst, int width, int height, int wstep, double rad
 		for (int j = 0; j <= radius; j++)
 		{
 			val += src[ri] - fv;
-			src[ti] = round(val*iarr);
+			dst[ti] = round(val*iarr);
 			ri += wstep; ti += wstep;
 		}
 

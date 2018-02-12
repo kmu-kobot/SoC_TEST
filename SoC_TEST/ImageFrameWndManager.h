@@ -18,7 +18,8 @@ protected:
 	std::vector <CImageFrameWnd* > m_vpImageWnd;
 };
 
-void ShowImage(const CByteImage& input, const char *name = NULL);
+//void ShowImage(const CByteImage& input, const char *name = NULL);
+void ShowImage(const CByteImage& input, const char *name = NULL, int x = 0, int y = 0);
 void CloseImage(const char* name);
 void CloseAllImages();
 bool GetClickPoints(const char* name, int* posX, int* posY, int nPoints);

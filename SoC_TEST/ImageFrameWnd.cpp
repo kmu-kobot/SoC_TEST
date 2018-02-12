@@ -12,7 +12,27 @@ CImageFrameWnd::CImageFrameWnd()
 {
 }
 
-CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name)
+//CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name)
+//{
+//	m_view.SetImage(image);
+//
+//	CString wndName;
+//	if (name)
+//		wndName = name;
+//	else
+//		wndName.Format("Image view %d", nFrameWndCount);
+//
+//	CRect rect(30*nFrameWndCount, 30*nFrameWndCount, 
+//		image.GetWidth()+20+30*nFrameWndCount, image.GetHeight()+40+30*nFrameWndCount);
+//	Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
+//
+//	nFrameWndCount++;
+//
+//	ShowWindow(SW_SHOW);
+//}
+
+
+CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name, int x, int y)
 {
 	m_view.SetImage(image);
 
@@ -22,14 +42,24 @@ CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name)
 	else
 		wndName.Format("Image view %d", nFrameWndCount);
 
-	CRect rect(30*nFrameWndCount, 30*nFrameWndCount, 
-		image.GetWidth()+20+30*nFrameWndCount, image.GetHeight()+40+30*nFrameWndCount);
-	Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
+	if (x || y)
+	{
+		CRect rect(x, y,
+			image.GetWidth() + 20 + x, image.GetHeight() + 40 + y);
+		Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
+	}
+	else
+	{
+		CRect rect(30 * nFrameWndCount, 30 * nFrameWndCount,
+			image.GetWidth() + 20 + 30 * nFrameWndCount, image.GetHeight() + 40 + 30 * nFrameWndCount);
+		Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
+	}
 
 	nFrameWndCount++;
 
 	ShowWindow(SW_SHOW);
 }
+
 
 CImageFrameWnd::~CImageFrameWnd()
 {

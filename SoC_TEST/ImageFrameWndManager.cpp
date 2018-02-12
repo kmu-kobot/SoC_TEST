@@ -75,6 +75,20 @@ void ShowImage(const CByteImage& input, const char *name)
 	}
 }
 
+void ShowImage(const CByteImage& input, const char *name, int x, int y)
+{
+	CImageFrameWnd *pImageWnd = gImageFrameWndManager.FindWnd(name);
+	if (pImageWnd) // 같은 이름의 창 발견
+	{
+		pImageWnd->GetImageView().SetImage(input);	 // 기존 창의 영상 갱신
+		pImageWnd->GetImageView().Invalidate(false); // 화면 갱신 함수 호출
+	}
+	else // 같은 이름의 창이 없을 시 새 창을 생성하고 배열에 추가
+	{
+		gImageFrameWndManager.Add(new CImageFrameWnd(input, name, x, y));
+	}
+}
+
 void CloseImage(const char* name)
 {
 	CImageFrameWnd* pImageWnd = gImageFrameWndManager.FindWnd(name);

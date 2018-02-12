@@ -8,7 +8,8 @@ class CImageFrameWnd : public CFrameWnd
 {
 public:
 	CImageFrameWnd();
-	CImageFrameWnd(const CByteImage &image, const char *name=NULL);
+	//CImageFrameWnd(const CByteImage &image, const char *name = NULL);
+	CImageFrameWnd(const CByteImage &image, const char *name = NULL, int x = 0, int y = 0);
 	virtual ~CImageFrameWnd();
 	CImageView& GetImageView() { return m_view; };
 

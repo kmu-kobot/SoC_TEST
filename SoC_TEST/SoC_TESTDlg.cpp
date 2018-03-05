@@ -517,6 +517,12 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 						0.25 * (gDOG[o * 4 + s + 1].GetAt(x + 1, y) - gDOG[o * 4 + s + 1].GetAt(x - 1, y) - (gDOG[o * 4 + s - 1].GetAt(x + 1, y) - gDOG[o * 4 + s - 1].GetAt(x - 1, y))), // H[2][0] = H[0][2]
 						0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1))), // H[2][1] = H[1][2]
 						gDOG[o * 4 + s].GetAt(x - 1, y) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x + 1, y) };  // current[y][x-1] - 2*current[y][x] + current[y1][x+1]
+		
+		
+		float yong[6] = { gDOG[o * 4 + s - 1].GetAt(x, y) , gDOG[o * 4 + s + 1].GetAt(x, y),
+			gDOG[o * 4 + s].GetAt(x, y + 1) , gDOG[o * 4 + s].GetAt(x, y - 1),
+			gDOG[o * 4 + s].GetAt(x + 1, y) , gDOG[o * 4 + s].GetAt(x - 1, y) };
+
 
 		float D[3] = { gDOG[o * 4 + s - 1].GetAt(x, y) - gDOG[o * 4 + s + 1].GetAt(x, y), // below[y][x] - above[y][x]
 						gDOG[o * 4 + s].GetAt(x, y + 1) - gDOG[o * 4 + s].GetAt(x, y - 1),  // current[y+1][x] - current[y+1][x]
@@ -531,7 +537,7 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 
 		if (abs(B[0]) > 0.5 || abs(B[1]) > 0.5 || abs(B[2]) > 0.5)
 		{
-			if (!nAdjustment)
+			if (nAdjustment == 0)
 				return false;
 
 			nAdjustment -= 1;
@@ -553,7 +559,8 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 		key.scale = s + B[0] + 0.5;
 		key.value = gDOG[o * 4 + s].GetAt((int)key.x, (int)key.y) + 0.5 * dp;
 
-		if(key.value < 0.03)
+		if (key.value < 0.03)
+			return false;
 
 		return true;
 	}
@@ -572,9 +579,7 @@ void EliminateLowContrast()
 	{
 		if (!SubPixel(*itr) || fabs((*itr).value) < 0.03 || !isCorner(*itr))
 		{
-			tmp = itr;
-			itr++;
-			feature.erase(tmp);
+			itr = feature.erase(itr);
 		}
 		else
 			itr++;

@@ -1,4 +1,37 @@
 ﻿  SoC_TESTDlg.cpp
+<<<<<<< HEAD
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(170): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(428): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(444): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(494): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(495): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(497): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(519): warning C4838: 'int'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(511): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(519): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(512): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(513): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(514): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(515): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(516): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(517): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(518): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(519): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(523): warning C4838: 'int'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(521): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(522): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(523): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(553): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(554): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(593): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimage.h(504): warning C4244: 'return': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimage.h(465): note: 클래스 템플릿 멤버 함수 'BYTE CMyImage<BYTE>::CubicConvIntp(double,double)'을(를) 컴파일하고 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(199): note: 컴파일 중인 함수 템플릿 인스턴스화 'BYTE CMyImage<BYTE>::CubicConvIntp(double,double)'에 대한 참조를 확인하십시오.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.h(41): note: 컴파일 중인 클래스 템플릿 인스턴스화 'CMyImage<BYTE>'에 대한 참조를 확인하세요.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimagefunc.h(28): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(607): note: 컴파일 중인 함수 템플릿 인스턴스화 'CMyImage<BYTE> RGB2Gray<BYTE>(const CMyImage<BYTE> &)'에 대한 참조를 확인하십시오.
+  SoC_TEST.vcxproj -> C:\Users\thdtj\OneDrive\문서\GitHub\SoC_TEST\SoC_TEST\x64\Debug\SoC_TEST.exe
+=======
 c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(436): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(452): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
 c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(502): warning C4244: '초기화 중': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
@@ -28,3 +61,4 @@ c:\users\1oooo\desktop\soc\soc_test\myimagefunc.h(28): warning C4244: '=': 'doub
 c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(563): warning C4715: 'SubPixel': 모든 제어 경로에서 값을 반환하지는 않습니다.
   LINK : C:\Users\1oooo\Desktop\SOC\SoC_TEST\x64\Debug\SoC_TEST.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
   SoC_TEST.vcxproj -> C:\Users\1oooo\Desktop\SOC\SoC_TEST\x64\Debug\SoC_TEST.exe
+>>>>>>> c4a019640002825320552cde3366077875106507

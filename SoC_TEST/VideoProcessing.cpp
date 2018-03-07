@@ -321,30 +321,29 @@ void boxBlurT(CByteImage& src, CByteImage& dst, int width, int height, double ra
 }
 
 //new
-void gaussBlur(CByteImage& src, CByteImage& dst, double sigma)
+void gaussBlur(CFloatImage& src, CFloatImage& dst, double sigma)
 {
 	int* bxs = boxesForGauss(sigma, 3);
 	int nWidth = src.GetWidth();
 	int nHeight = src.GetHeight();
 	int nWStep = src.GetWStep();
-	BYTE* pSrc = src.GetPtr();
-	BYTE* pDst = dst.GetPtr();
+	float* pSrc = src.GetPtr();
+	float* pDst = dst.GetPtr();
 	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[0] - 1) / 2);
 	boxBlur(pDst, pSrc, nWidth, nHeight, nWStep, (bxs[1] - 1) / 2);
 	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[2] - 1) / 2);
 }
 
-
-void boxBlur(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius)
+void boxBlur(float* src, float* dst, int width, int height, int wstep, double radius)
 {
-	memcpy(dst, src, wstep*height);
+	memcpy(dst, src, wstep*height*sizeof(float));
 	boxBlurH(dst, src, width, height, wstep, radius);
 	boxBlurT(src, dst, width, height, wstep, radius);
 }
 
 
 
-void boxBlurH(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius)
+void boxBlurH(float* src, float* dst, int width, int height, int wstep, double radius)
 {
 	double iarr = 1 / (radius + radius + 1);
 
@@ -354,9 +353,9 @@ void boxBlurH(BYTE* src, BYTE* dst, int width, int height, int wstep, double rad
 		int li = ti;
 		int ri = ti + radius;
 
-		int fv = src[ti];
-		int lv = src[ti + width - 1];
-		double val = (radius + 1)*fv;
+		float fv = src[ti];
+		float lv = src[ti + width - 1];
+		float val = (radius + 1)*fv;
 
 		for (int j = 0; j<radius; j++)
 			val += src[ti + j];
@@ -364,24 +363,24 @@ void boxBlurH(BYTE* src, BYTE* dst, int width, int height, int wstep, double rad
 		for (int j = 0; j <= radius; j++)
 		{
 			val += src[ri++] - fv;
-			dst[ti++] = round(val*iarr);
+			dst[ti++] = val*iarr;
 		}
 
 		for (int j = radius + 1; j<width - radius; j++)
 		{
 			val += src[ri++] - src[li++];
-			dst[ti++] = round(val*iarr);
+			dst[ti++] = val*iarr;
 		}
 
 		for (int j = width - radius; j<width; j++)
 		{
 			val += lv - src[li++];
-			dst[ti++] = round(val*iarr);
+			dst[ti++] = val*iarr;
 		}
 	}
 }
 
-void boxBlurT(BYTE* src, BYTE* dst, int width, int height, int wstep, double radius)
+void boxBlurT(float* src, float* dst, int width, int height, int wstep, double radius)
 {
 	double iarr = 1 / (radius + radius + 1);
 
@@ -390,9 +389,9 @@ void boxBlurT(BYTE* src, BYTE* dst, int width, int height, int wstep, double rad
 		int ti = i;
 		int li = ti;
 		int ri = ti + radius * wstep;
-		int fv = src[ti];
-		int lv = src[ti + wstep * (height - 1)];
-		double val = (radius + 1)*fv;
+		float fv = src[ti];
+		float lv = src[ti + wstep * (height - 1)];
+		float val = (radius + 1)*fv;
 
 		for (int j = 0; j<radius; j++)
 			val += src[ti + j * wstep];
@@ -400,21 +399,21 @@ void boxBlurT(BYTE* src, BYTE* dst, int width, int height, int wstep, double rad
 		for (int j = 0; j <= radius; j++)
 		{
 			val += src[ri] - fv;
-			dst[ti] = round(val*iarr);
+			dst[ti] = val*iarr;
 			ri += wstep; ti += wstep;
 		}
 
 		for (int j = radius + 1; j<height - radius; j++)
 		{
 			val += src[ri] - src[li];
-			dst[ti] = round(val*iarr);
+			dst[ti] = val*iarr;
 			li += wstep; ri += wstep; ti += wstep;
 		}
 
 		for (int j = height - radius; j<height; j++)
 		{
 			val += lv - src[li];
-			dst[ti] = round(val*iarr);
+			dst[ti] = val*iarr;
 			li += wstep; ti += wstep;
 		}
 	}

@@ -180,6 +180,7 @@ CFloatImage gScaleSpace[20];
 CByteImage gScaleOriginal[4];
 CFloatImage gDOG[16];
 //CByteImage gKeyPoint[8];
+static float SIFT_CURV_THR = 10.0f;
 std::vector<feature_t> feature;
 std::vector<feature_t>::iterator itr;
 #define NUM_CHANNEL 1
@@ -609,6 +610,18 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 		key.value = gDOG[o * 4 + s].GetAt((int)key.x, (int)key.y) + 0.5 * dp;
 
 		if (key.value < 0.03)
+			return false;
+
+		//코너외엔 다 제거
+		float dxx = gDOG[o * 4 + s].GetAt(x - 1, y) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x + 1, y);
+		float dxy = gDOG[o * 4 + s].GetAt(x, y - 1) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x, y + 1);
+		float dyy = 0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1)));
+
+		float trH = dxx + dyy;
+		float detH = dxx * dyy - dxy * dxy;
+		float response = (SIFT_CURV_THR + 1) * (SIFT_CURV_THR + 1) / (SIFT_CURV_THR);
+
+		if (detH <= 0 || (trH * trH / detH) >= response)
 			return false;
 
 		return true;

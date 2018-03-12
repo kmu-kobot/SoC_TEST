@@ -1,73 +1,26 @@
-﻿  stdafx.cpp
-  VideoProcessing.cpp
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(132): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(204): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(210): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(252): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(264): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(267): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(270): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(273): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(276): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(292): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(303): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(307): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(310): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(314): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(317): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(354): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(358): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(366): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(369): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(372): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(375): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(378): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(391): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(394): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(402): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(406): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(409): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(413): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\videoprocessing.cpp(416): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  SoC_TESTDlg.cpp
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(170): warning C4244: '초기화 중': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(476): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(476): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(492): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(492): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(542): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(543): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(544): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(567): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(560): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(561): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(562): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(564): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(565): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(566): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(609): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(610): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(618): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(661): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\myimage.h(381): warning C4244: 'return': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  c:\users\1oooo\desktop\soc\soc_test\myimage.h(367): note: 클래스 템플릿 멤버 함수 'BYTE CMyImage<BYTE>::BiLinearIntp(double,double)'을(를) 컴파일하고 있습니다.
-  c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(202): note: 컴파일 중인 함수 템플릿 인스턴스화 'BYTE CMyImage<BYTE>::BiLinearIntp(double,double)'에 대한 참조를 확인하십시오.
-  c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.h(41): note: 컴파일 중인 클래스 템플릿 인스턴스화 'CMyImage<BYTE>'에 대한 참조를 확인하세요.
-c:\users\1oooo\desktop\soc\soc_test\myimagefunc.h(28): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  c:\users\1oooo\desktop\soc\soc_test\soc_testdlg.cpp(685): note: 컴파일 중인 함수 템플릿 인스턴스화 'CMyImage<BYTE> RGB2Gray<BYTE>(const CMyImage<BYTE> &)'에 대한 참조를 확인하십시오.
-  SoC_TEST.cpp
-  Segmentation.cpp
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(70): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(72): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(74): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(210): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(211): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-c:\users\1oooo\desktop\soc\soc_test\segmentation.cpp(212): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  MyImageFunc.cpp
-  LoadImageFromFileDialog.cpp
-  ImageView.cpp
-  ImageFrameWndManager.cpp
-c:\users\1oooo\desktop\soc\soc_test\imageframewndmanager.cpp(56): warning C4267: '초기화 중': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-  ImageFrameWnd.cpp
-  코드를 생성하고 있습니다...
-  SoC_TEST.vcxproj -> C:\Users\1oooo\Desktop\SOC\SoC_TEST\x64\Debug\SoC_TEST.exe
+﻿  SoC_TESTDlg.cpp
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(486): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(502): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(552): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(553): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(554): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(577): warning C4838: 'double'에서 'float'(으)로의 변환에는 축소 변환이 필요합니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(570): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(571): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(572): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(574): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(575): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(576): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(619): warning C4244: '=': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(620): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(627): warning C4244: '초기화 중': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(668): warning C4244: '초기화 중': 'double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(853): warning C4244: '인수': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(856): warning C4244: '인수': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimage.h(381): warning C4244: 'return': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimage.h(367): note: 클래스 템플릿 멤버 함수 'BYTE CMyImage<BYTE>::BiLinearIntp(double,double)'을(를) 컴파일하고 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(210): note: 컴파일 중인 함수 템플릿 인스턴스화 'BYTE CMyImage<BYTE>::BiLinearIntp(double,double)'에 대한 참조를 확인하십시오.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.h(41): note: 컴파일 중인 클래스 템플릿 인스턴스화 'CMyImage<BYTE>'에 대한 참조를 확인하세요.
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\myimagefunc.h(28): warning C4244: '=': 'double'에서 'BYTE'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\soc_testdlg.cpp(730): note: 컴파일 중인 함수 템플릿 인스턴스화 'CMyImage<BYTE> RGB2Gray<BYTE>(const CMyImage<BYTE> &)'에 대한 참조를 확인하십시오.
+  SoC_TEST.vcxproj -> C:\Users\thdtj\OneDrive\문서\GitHub\SoC_TEST\SoC_TEST\x64\Debug\SoC_TEST.exe

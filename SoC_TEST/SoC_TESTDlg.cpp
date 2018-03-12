@@ -143,8 +143,8 @@ void CSoCTESTDlg::OnPaint()
 		int cyIcon = GetSystemMetrics(SM_CYICON);
 		CRect rect;
 		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
+		int x = (rect.Width() - cxIcon + 1) >> 1;
+		int y = (rect.Height() - cyIcon + 1) >> 1;
 
 		// 아이콘을 그립니다.
 		dc.DrawIcon(x, y, m_hIcon);
@@ -166,10 +166,16 @@ typedef struct Feature
 {
 	int octave, scale;
 	float x, y, value;
-	Feature(int o, int s, float x, float y, int v)
-		:octave(o), scale(s), x(x), y(y), value(v) {};
+	float hist[36];
+	Feature(int o, int s, float x, float y, float v)
+		:octave(o), scale(s), x(x), y(y), value(v) 
+	{
+		memset(hist, 0, sizeof(float) * 36);
+	};
 } feature_t;
 
+
+float* gWeight[2];
 CByteImage gImageBuf;
 CByteImage gImageOut;
 CByteImage gImageBufGray;
@@ -179,8 +185,9 @@ CFloatImage gScaleTemp[4];
 CFloatImage gScaleSpace[20];
 CByteImage gScaleOriginal[4];
 CFloatImage gDOG[16];
+CFloatImage gGradientMagnitude[8];
+CFloatImage gGradientOrientation[8];
 //CByteImage gKeyPoint[8];
-static float SIFT_CURV_THR = 10.0f;
 std::vector<feature_t> feature;
 std::vector<feature_t>::iterator itr;
 #define NUM_CHANNEL 1
@@ -188,18 +195,19 @@ int gWidth[4];
 int gHeight[4];
 int gWStep[4];
 int gSize[4];
+double gSigma[4] = { 1.6, 1.6*sqrt(2), 3.2, 3.2*sqrt(2) };
 
 void BuildScaleSpace()
 {
 
-	static double dSigma[4] = { 1.6, 1.6*sqrt(2), 3.2, 3.2*sqrt(2) };
+
 
 	for (int r = 0; r < gHeight[0]; r++)
 	{
 		BYTE* pDst = gScaleOriginal[0].GetPtr(gHeight[0] - r - 1);
 		for (int c = 0; c < gWidth[0]; c++)
 		{
-			pDst[c] = gImageBufGray.BiLinearIntp(c / 2, r / 2);
+			pDst[c] = gImageBufGray.BiLinearIntp(c >> 1, r >> 1);
 		}
 	}
 
@@ -211,12 +219,12 @@ void BuildScaleSpace()
 		pTemp[pos] = (float)pOriginal[pos];
 	}
 
-	gaussBlur(gScaleTemp[0], gScaleSpace[0], dSigma[0]);
+	gaussBlur(gScaleTemp[0], gScaleSpace[0], gSigma[0]);
 
 	for (int i = 0; i < 4; i++)
 	{
 		memcpy(gScaleTemp[0].GetPtr(), gScaleSpace[i].GetPtr(), gSize[0] * sizeof(float));
-		gaussBlur(gScaleTemp[0], gScaleSpace[i + 1], dSigma[i]);
+		gaussBlur(gScaleTemp[0], gScaleSpace[i + 1], gSigma[i]);
 	}
 
 	for (int i = 1; i < 4; i++)
@@ -234,7 +242,7 @@ void BuildScaleSpace()
 		for (int j = 1; j < 5; j++)
 		{
 			memcpy(gScaleTemp[i].GetPtr(), gScaleSpace[i * 5 + j - 1].GetPtr(), gSize[i] * sizeof(float));
-			gaussBlur(gScaleTemp[i], gScaleSpace[i * 5 + j], dSigma[j - 1]);
+			gaussBlur(gScaleTemp[i], gScaleSpace[i * 5 + j], gSigma[j - 1]);
 		}
 	}
 
@@ -243,18 +251,18 @@ void BuildScaleSpace()
 	//	BYTE* pDst = gScaleTemp[0].GetPtr(gHeight[0] - r - 1);
 	//	for (int c = 0; c < gWidth[0]; c++)
 	//	{
-	//		pDst[c] = gImageBufGray.CubicConvIntp(c / 2, r / 2);
+	//		pDst[c] = gImageBufGray.CubicConvIntp(c >> 1, r >> 1);
 	//	}
 	//}
 
 	////ShowImage(gScaleTemp[0], "1/2 Scale Original Image");
-	//gaussBlur(gScaleTemp[0], gScaleSpace[0], dSigma[0]);
+	//gaussBlur(gScaleTemp[0], gScaleSpace[0], gSigma[0]);
 	/////ShowImage(gScaleTemp[0], std::to_string(0).c_str());
 
 	//for (int i = 0; i < 4; i++)
 	//{
 	//	memcpy(gScaleTemp[0].GetPtr(), gScaleSpace[i].GetPtr(), gSize[0]);
-	//	gaussBlur(gScaleTemp[0], gScaleSpace[i + 1], dSigma[i]);
+	//	gaussBlur(gScaleTemp[0], gScaleSpace[i + 1], gSigma[i]);
 	//	//ShowImage(gScaleSpace[i], std::to_string(i + 1).c_str());
 	//}
 
@@ -276,7 +284,7 @@ void BuildScaleSpace()
 	//	for (int j = 2; j < 4; j++)
 	//	{
 	//		memcpy(gScaleTemp[i].GetPtr(), gScaleSpace[i * 5 + j].GetPtr(), gSize[i]);
-	//		gaussBlur(gScaleTemp[i], gScaleSpace[i * 5 + j + 1], dSigma[j]);
+	//		gaussBlur(gScaleTemp[i], gScaleSpace[i * 5 + j + 1], gSigma[j]);
 	//	}
 	//}
 
@@ -445,13 +453,15 @@ void FindKeyPoint()
 		{
 			for (int r = 1; r < nHeight - 1; r++)
 			{
-				float* src0 = gDOG[i * 4 + j].GetPtr(r);
-				float* src1 = gDOG[i * 4 + j + 1].GetPtr(r);
-				float* src2 = gDOG[i * 4 + j + 2].GetPtr(r);
-				//int* dst = gKeyPoint[i * 2 + j].GetPtr(r);
+				float* src0 = gDOG[(i << 2) + j].GetPtr(r);
+				float* src1 = gDOG[(i << 2) + j + 1].GetPtr(r);
+				float* src2 = gDOG[(i << 2) + j + 2].GetPtr(r);
+				//int* dst = gKeyPoint[(i << 1) + j].GetPtr(r);
 
 				for (int c = 1; c < nWidth - 1; c++)
 				{
+					if (fabs(src1[c]) < 0.9)
+						continue;
 					if (src1[c] == src0[c] || src1[c] == src2[c])
 						continue;
 					bool max = src1[c] > src0[c];
@@ -493,7 +503,7 @@ void FindKeyPoint()
 					}
 				}
 			}
-			//ShowImage(gKeyPoint[i * 2 + j], std::to_string(i * 2 + j).c_str(), x, j * (30 + gHeight[i]));
+			//ShowImage(gKeyPoint[(i << 1) + j], std::to_string((i << 1) + j).c_str(), x, j * (30 + gHeight[i]));
 		}
 		x += gWidth[i];
 	}
@@ -556,25 +566,25 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 
 		float dp = 0.0; // dot product
 
-		float H[9] = { gDOG[o * 4 + s - 1].GetAt(x, y) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s + 1].GetAt(x, y),  // below[y][x] - 2*current[y][x] + above[y][x]
-						0.25 * (gDOG[o * 4 + s + 1].GetAt(x, y + 1) - gDOG[o * 4 + s + 1].GetAt(x, y - 1) - (gDOG[o * 4 + s - 1].GetAt(x, y + 1) - gDOG[o * 4 + s - 1].GetAt(x, y - 1))), // 0.25 * (above[y+1][x] - above[y-1][x] - (below[y+1][x]-below[y-1][x]))
-						0.25 * (gDOG[o * 4 + s + 1].GetAt(x + 1, y) - gDOG[o * 4 + s + 1].GetAt(x - 1, y) - (gDOG[o * 4 + s - 1].GetAt(x + 1, y) - gDOG[o * 4 + s - 1].GetAt(x - 1, y))), // 0.25 * (above[y][x+1] - above[y][x-1] - (below[y][x+1]-below[y][x-1]))
-						0.25 * (gDOG[o * 4 + s + 1].GetAt(x, y + 1) - gDOG[o * 4 + s + 1].GetAt(x, y - 1) - (gDOG[o * 4 + s - 1].GetAt(x, y + 1) - gDOG[o * 4 + s - 1].GetAt(x, y - 1))), // H[1][0] = H[0][1]
-						gDOG[o * 4 + s].GetAt(x, y - 1) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x, y + 1),  // current[y - 1][x] - 2*current[y][x] + current[y + 1][x]
-						0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1))), // 0.25 * (current[y+1][x+1] - current[y+1][x-1] - (current[y-1][x+1]-current[y-1][x-1]))
-						0.25 * (gDOG[o * 4 + s + 1].GetAt(x + 1, y) - gDOG[o * 4 + s + 1].GetAt(x - 1, y) - (gDOG[o * 4 + s - 1].GetAt(x + 1, y) - gDOG[o * 4 + s - 1].GetAt(x - 1, y))), // H[2][0] = H[0][2]
-						0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1))), // H[2][1] = H[1][2]
-						gDOG[o * 4 + s].GetAt(x - 1, y) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x + 1, y) };  // current[y][x-1] - 2*current[y][x] + current[y1][x+1]
+		float H[9] = { gDOG[(o << 2) + s - 1].GetAt(x, y) - 2 * gDOG[(o << 2) + s].GetAt(x, y) + gDOG[(o << 2) + s + 1].GetAt(x, y),  // below[y][x] - 2*current[y][x] + above[y][x]
+						0.25 * (gDOG[(o << 2) + s + 1].GetAt(x, y + 1) - gDOG[(o << 2) + s + 1].GetAt(x, y - 1) - (gDOG[(o << 2) + s - 1].GetAt(x, y + 1) - gDOG[(o << 2) + s - 1].GetAt(x, y - 1))), // 0.25 * (above[y+1][x] - above[y-1][x] - (below[y+1][x]-below[y-1][x]))
+						0.25 * (gDOG[(o << 2) + s + 1].GetAt(x + 1, y) - gDOG[(o << 2) + s + 1].GetAt(x - 1, y) - (gDOG[(o << 2) + s - 1].GetAt(x + 1, y) - gDOG[(o << 2) + s - 1].GetAt(x - 1, y))), // 0.25 * (above[y][x+1] - above[y][x-1] - (below[y][x+1]-below[y][x-1]))
+						0.25 * (gDOG[(o << 2) + s + 1].GetAt(x, y + 1) - gDOG[(o << 2) + s + 1].GetAt(x, y - 1) - (gDOG[(o << 2) + s - 1].GetAt(x, y + 1) - gDOG[(o << 2) + s - 1].GetAt(x, y - 1))), // H[1][0] = H[0][1]
+						gDOG[(o << 2) + s].GetAt(x, y - 1) - 2 * gDOG[(o << 2) + s].GetAt(x, y) + gDOG[(o << 2) + s].GetAt(x, y + 1),  // current[y - 1][x] - 2*current[y][x] + current[y + 1][x]
+						0.25 * (gDOG[(o << 2) + s].GetAt(x + 1, y + 1) - gDOG[(o << 2) + s].GetAt(x - 1, y + 1) - (gDOG[(o << 2) + s].GetAt(x + 1, y - 1) - gDOG[(o << 2) + s].GetAt(x - 1, y - 1))), // 0.25 * (current[y+1][x+1] - current[y+1][x-1] - (current[y-1][x+1]-current[y-1][x-1]))
+						0.25 * (gDOG[(o << 2) + s + 1].GetAt(x + 1, y) - gDOG[(o << 2) + s + 1].GetAt(x - 1, y) - (gDOG[(o << 2) + s - 1].GetAt(x + 1, y) - gDOG[(o << 2) + s - 1].GetAt(x - 1, y))), // H[2][0] = H[0][2]
+						0.25 * (gDOG[(o << 2) + s].GetAt(x + 1, y + 1) - gDOG[(o << 2) + s].GetAt(x - 1, y + 1) - (gDOG[(o << 2) + s].GetAt(x + 1, y - 1) - gDOG[(o << 2) + s].GetAt(x - 1, y - 1))), // H[2][1] = H[1][2]
+						gDOG[(o << 2) + s].GetAt(x - 1, y) - 2 * gDOG[(o << 2) + s].GetAt(x, y) + gDOG[(o << 2) + s].GetAt(x + 1, y) };  // current[y][x-1] - 2*current[y][x] + current[y1][x+1]
 		
 		
-		float yong[6] = { gDOG[o * 4 + s - 1].GetAt(x, y) , gDOG[o * 4 + s + 1].GetAt(x, y),
-			gDOG[o * 4 + s].GetAt(x, y + 1) , gDOG[o * 4 + s].GetAt(x, y - 1),
-			gDOG[o * 4 + s].GetAt(x + 1, y) , gDOG[o * 4 + s].GetAt(x - 1, y) };
+		float yong[6] = { gDOG[(o << 2) + s - 1].GetAt(x, y) , gDOG[(o << 2) + s + 1].GetAt(x, y),
+			gDOG[(o << 2) + s].GetAt(x, y + 1) , gDOG[(o << 2) + s].GetAt(x, y - 1),
+			gDOG[(o << 2) + s].GetAt(x + 1, y) , gDOG[(o << 2) + s].GetAt(x - 1, y) };
 
 
-		float D[3] = { gDOG[o * 4 + s - 1].GetAt(x, y) - gDOG[o * 4 + s + 1].GetAt(x, y), // below[y][x] - above[y][x]
-						gDOG[o * 4 + s].GetAt(x, y + 1) - gDOG[o * 4 + s].GetAt(x, y - 1),  // current[y+1][x] - current[y+1][x]
-						gDOG[o * 4 + s].GetAt(x + 1, y) - gDOG[o * 4 + s].GetAt(x - 1, y) };  // current[y][x+1] - current[y][x-1]
+		float D[3] = { gDOG[(o << 2) + s - 1].GetAt(x, y) - gDOG[(o << 2) + s + 1].GetAt(x, y), // below[y][x] - above[y][x]
+						gDOG[(o << 2) + s].GetAt(x, y + 1) - gDOG[(o << 2) + s].GetAt(x, y - 1),  // current[y+1][x] - current[y+1][x]
+						gDOG[(o << 2) + s].GetAt(x + 1, y) - gDOG[(o << 2) + s].GetAt(x - 1, y) };  // current[y][x+1] - current[y][x-1]
 
 
 		float B[3];
@@ -607,38 +617,35 @@ bool SubPixel(feature_t& key, int nAdjustment = 2)
 		key.x = x + B[2];
 		key.y = y + B[1];
 		key.scale = s + B[0] + 0.5;
-		key.value = gDOG[o * 4 + s].GetAt((int)key.x, (int)key.y) + 0.5 * dp;
+		key.value = gDOG[(o << 2) + s].GetAt((int)key.x, (int)key.y) + 0.5 * dp;
 
-		if (key.value < 0.03)
+		if (fabs(key.value) < 0.03)
 			return false;
 
-		//코너외엔 다 제거
 		float dxx = gDOG[o * 4 + s].GetAt(x - 1, y) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x + 1, y);
-		float dxy = gDOG[o * 4 + s].GetAt(x, y - 1) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x, y + 1);
-		float dyy = 0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1)));
+		float dyy = gDOG[o * 4 + s].GetAt(x, y - 1) - 2 * gDOG[o * 4 + s].GetAt(x, y) + gDOG[o * 4 + s].GetAt(x, y + 1);
+		float dxy = 0.25 * (gDOG[o * 4 + s].GetAt(x + 1, y + 1) - gDOG[o * 4 + s].GetAt(x - 1, y + 1) - (gDOG[o * 4 + s].GetAt(x + 1, y - 1) - gDOG[o * 4 + s].GetAt(x - 1, y - 1)));
 
 		float trH = dxx + dyy;
 		float detH = dxx * dyy - dxy * dxy;
-		float response = (SIFT_CURV_THR + 1) * (SIFT_CURV_THR + 1) / (SIFT_CURV_THR);
 
-		if (detH <= 0 || (trH * trH / detH) >= response)
+		float R = trH * trH / detH;
+		if (detH <= 0 || R >= 12.1)
+		{
+			if (detH > 0)
+				key.x = key.x;
 			return false;
-
+		}
 		return true;
 	}
 	return false;
 }
 
-bool isCorner(feature_t& key)
-{
-	return true;
-}
-
-void EliminateLowContrast()
+void AccuratingKey()
 {
 	for (itr = feature.begin(); itr != feature.end();)
 	{
-		if (!SubPixel(*itr) || fabs((*itr).value) < 0.03 || !isCorner(*itr))
+		if (!SubPixel(*itr))
 		{
 			itr = feature.erase(itr);
 		}
@@ -666,9 +673,47 @@ void EliminateLowContrast()
 	ShowImage(gImageOut, "keyPoints");
 }
 
+void BuildGradient()
+{
+	int SSIdx, GrdIdx, wstep;
+	float dx, dy;
+	float* pSrc;
+	float* pMag;
+	float* pOri;
+	for (int i = 0; i < 4; i++)
+	{
+		wstep = gWStep[i];
+		for (int j = 0; j < 2; j++)
+		{
+			SSIdx = i * 5 + j + 1;
+			GrdIdx = (i << 1) + j;
+			pSrc = gScaleSpace[SSIdx].GetPtr();
+
+
+			for (int r = 1; r < gHeight[i] - 1; r++)
+			{
+				pSrc = gScaleSpace[SSIdx].GetPtr(r);
+				pMag = gGradientMagnitude[GrdIdx].GetPtr(r);
+				pOri = gGradientOrientation[GrdIdx].GetPtr(r);
+				for (int c = 1; c < gWidth[i] - 1; c++)
+				{
+					dx = pSrc[c + 1] - pSrc[c - 1];
+					dy = pSrc[c + wstep] - pSrc[c - wstep];
+					pMag[c] = dx * dx - dy * dy; // no sqrt
+					pOri[c] = atan2(dy, dx);
+				}
+			}
+
+			//ShowImage(gGradientMagnitude[GrdIdx], std::to_string(GrdIdx).c_str());
+		}
+	}
+}
+
+
 
 void AssignOrientation()
 {
+	BuildGradient();
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
 
@@ -701,78 +746,118 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	BuildScaleSpace();
 	DiffrenceOfGaussian();
 	FindKeyPoint();
-	EliminateLowContrast();
-	//AssignOrientation();
-
+	feature;
+	AccuratingKey();
+	AssignOrientation();
+	feature;
 	return TRUE;
 }
 
 
 void InitScaleSpace()
 {
-	int nWidth = gBmpInfo.bmiHeader.biWidth;
-	int nHeight = gBmpInfo.bmiHeader.biHeight;
-	gScaleOriginal[0] = CByteImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleOriginal[1] = CByteImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleOriginal[2] = CByteImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleOriginal[3] = CByteImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleTemp[0] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleTemp[1] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleTemp[2] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleTemp[3] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleSpace[0] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleSpace[1] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleSpace[2] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleSpace[3] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleSpace[4] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gScaleSpace[5] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleSpace[6] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleSpace[7] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleSpace[8] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleSpace[9] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gScaleSpace[10] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleSpace[11] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleSpace[12] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleSpace[13] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleSpace[14] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gScaleSpace[15] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleSpace[16] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleSpace[17] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleSpace[18] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gScaleSpace[19] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-
-	for(int i = 0; i < 4; i++)
+	gWidth[0] = gBmpInfo.bmiHeader.biWidth << 1;
+	gHeight[0] = gBmpInfo.bmiHeader.biHeight << 1;
+	gWStep[0] = ((gWidth[0]*NUM_CHANNEL * sizeof(float) + 3)&~3) / sizeof(float);
+	gSize[0] = gHeight[0] * gWStep[0];
+	for(int i = 1; i < 4; i++)
 	{
-		gWidth[i] = gScaleTemp[i].GetWidth();
-		gHeight[i] = gScaleTemp[i].GetHeight();
-		gWStep[i] = gScaleTemp[i].GetWStep();
+		gWidth[i] = gWidth[i - 1] >> 1;
+		gHeight[i] = gHeight[i - 1] >> 1;
+		gWStep[i] = ((gWidth[i] * NUM_CHANNEL * sizeof(float) + 3)&~3) / sizeof(float);
 		gSize[i] = gHeight[i] * gWStep[i];
 	};
+	gScaleOriginal[0] = CByteImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleOriginal[1] = CByteImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleOriginal[2] = CByteImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleOriginal[3] = CByteImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleTemp[0] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleTemp[1] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleTemp[2] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleTemp[3] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleSpace[0] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleSpace[1] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleSpace[2] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleSpace[3] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleSpace[4] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gScaleSpace[5] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleSpace[6] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleSpace[7] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleSpace[8] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleSpace[9] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gScaleSpace[10] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleSpace[11] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleSpace[12] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleSpace[13] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleSpace[14] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gScaleSpace[15] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleSpace[16] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleSpace[17] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleSpace[18] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gScaleSpace[19] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+
 }
 
 
 void InitDOG()
 {
-	int nWidth = gBmpInfo.bmiHeader.biWidth;
-	int nHeight = gBmpInfo.bmiHeader.biHeight;
-	gDOG[0] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gDOG[1] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gDOG[2] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gDOG[3] = CFloatImage(nWidth * 2, nHeight * 2, NUM_CHANNEL);
-	gDOG[4] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gDOG[5] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gDOG[6] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gDOG[7] = CFloatImage(nWidth, nHeight, NUM_CHANNEL);
-	gDOG[8] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gDOG[9] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gDOG[10] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gDOG[11] = CFloatImage(nWidth / 2, nHeight / 2, NUM_CHANNEL);
-	gDOG[12] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gDOG[13] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gDOG[14] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
-	gDOG[15] = CFloatImage(nWidth / 4, nHeight / 4, NUM_CHANNEL);
+	gDOG[0] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gDOG[1] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gDOG[2] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gDOG[3] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gDOG[4] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gDOG[5] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gDOG[6] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gDOG[7] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gDOG[8] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gDOG[9] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gDOG[10] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gDOG[11] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gDOG[12] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gDOG[13] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gDOG[14] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gDOG[15] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
 }
 
+
+void InitGradient()
+{
+	gGradientMagnitude[0] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gGradientMagnitude[1] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gGradientMagnitude[2] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gGradientMagnitude[3] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gGradientMagnitude[4] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gGradientMagnitude[5] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gGradientMagnitude[6] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gGradientMagnitude[7] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gGradientOrientation[0] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gGradientOrientation[1] = CFloatImage(gWidth[0], gHeight[0], NUM_CHANNEL);
+	gGradientOrientation[2] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gGradientOrientation[3] = CFloatImage(gWidth[1], gHeight[1], NUM_CHANNEL);
+	gGradientOrientation[4] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gGradientOrientation[5] = CFloatImage(gWidth[2], gHeight[2], NUM_CHANNEL);
+	gGradientOrientation[6] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+	gGradientOrientation[7] = CFloatImage(gWidth[3], gHeight[3], NUM_CHANNEL);
+}
+
+void InitWeight()
+{
+	int nRadius[2] = { (int)(3 * gSigma[1]), (int)(3 * gSigma[2]) };
+	int nWidth[2] = { (int)(nRadius[0] * 2 + 1), (int)(nRadius[1] * 2 + 1) };
+	gWeight[0] = new float[nWidth[0] * nWidth[0]];
+	gWeight[1] = new float[nWidth[1] * nWidth[1]];
+
+	for (int i = 0; i < 2; i++) {
+		for (int r = 0; r < nWidth[i]; r++)
+		{
+			gWeight[i][r * nWidth[i] + nRadius[i]] = expf(-(r - nRadius[i]) * (r - nRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
+			for (int c = 0; c < nWidth[i]; c++)
+			{
+				gWeight[i][r * nWidth[i] + c] = gWeight[i][r * nWidth[i] + nRadius[i]] * expf(-(c - nRadius[i]) * (c - nRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
+			}
+		}
+	}
+}
 
 void CSoCTESTDlg::OnBnClickedButtonCamStart()
 {
@@ -785,6 +870,8 @@ void CSoCTESTDlg::OnBnClickedButtonCamStart()
 	gImageOut = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
 	InitScaleSpace();
 	InitDOG();
+	InitGradient();
+	InitWeight();
 	m_webCam.SetCallBackOnFrame(ProcessCamFrame);
 }
 

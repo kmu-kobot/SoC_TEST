@@ -43,13 +43,13 @@ protected:
 
 void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24);
 
-void GaussianBlur(CByteImage& src, CByteImage& dst, double radius);
-
+//void GaussianBlur(CByteImage& src, CByteImage& dst, double radius);
+//
+//void gaussBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
+//void boxBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
+//void boxBlurH(CByteImage& src, CByteImage& dst, int w, int h, double r);
+//void boxBlurT(CByteImage& src, CByteImage& dst, int w, int h, double r);
 int* boxesForGauss(double sigma, int n);
-void gaussBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
-void boxBlur(CByteImage& src, CByteImage& dst, int w, int h, double r);
-void boxBlurH(CByteImage& src, CByteImage& dst, int w, int h, double r);
-void boxBlurT(CByteImage& src, CByteImage& dst, int w, int h, double r);
 void gaussBlur(CFloatImage& src, CFloatImage& dst, double sigma);
 void boxBlur(float* src, float* dst, int width, int height, int wstep, double radius);
 void boxBlurH(float* src, float* dst, int width, int height, int wstep, double radius);

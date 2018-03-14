@@ -197,25 +197,7 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 //}
 //
 //
-// int* boxesForGauss(double sigma, int n)  // standard deviation, number of boxes
-//{
-//	double widthIdeal = sqrt((12 * sigma*sigma / n) + 1);  // Ideal averaging filter width 
-//
-//	int widthLow = floor(widthIdeal); 
-//	if (widthLow % 2 == 0) widthLow--;
-//
-//	int widthUp = widthLow + 2;
-//
-//	double mIdeal = (12 * sigma*sigma - n * widthLow*widthLow - 4 * n*widthLow - 3 * n) / (-4 * widthLow - 4);
-//	int m = round(mIdeal);
-//	// var sigmaActual = Math.sqrt( (m*wl*wl + (n-m)*wu*wu - n)/12 );
-//
-//	int* sizes = new int[n];
-//	for (int i = 0; i<n; i++) sizes[i] = (i<m ? widthLow : widthUp);
-//	return sizes;
-//}
-//
-//
+
 //void gaussBlur(CByteImage& src, CByteImage& dst, int width, int height, double radius)
 //{
 //	int* bxs = boxesForGauss(radius, 3);
@@ -321,6 +303,24 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 //}
 
 //new
+ int* boxesForGauss(double sigma, int n)  // standard deviation, number of boxes
+{
+	double widthIdeal = sqrt((12 * sigma*sigma / n) + 1);  // Ideal averaging filter width 
+
+	int widthLow = floor(widthIdeal); 
+	if (widthLow % 2 == 0) widthLow--;
+
+	int widthUp = widthLow + 2;
+
+	double mIdeal = (12 * sigma*sigma - n * widthLow*widthLow - 4 * n*widthLow - 3 * n) / (-4 * widthLow - 4);
+	int m = round(mIdeal);
+	// var sigmaActual = Math.sqrt( (m*wl*wl + (n-m)*wu*wu - n)/12 );
+
+	int* sizes = new int[n];
+	for (int i = 0; i<n; i++) sizes[i] = (i<m ? widthLow : widthUp);
+	return sizes;
+}
+
 void gaussBlur(CFloatImage& src, CFloatImage& dst, double sigma)
 {
 	int* bxs = boxesForGauss(sigma, 3);

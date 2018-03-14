@@ -7,6 +7,9 @@
 #include "SoC_TESTDlg.h"
 #include "afxdialogex.h"
 
+#define _USE_MATH_DEFINES
+
+#include <math.h>
 #include <string>
 #include <list>
 #include "MyImage.h"
@@ -166,12 +169,19 @@ typedef struct Feature
 {
 	int octave, scale;
 	float x, y, value;
-	float hist[36];
+
+	int orientation;
+	int vec[128];
+
 	Feature(int o, int s, float x, float y, float v)
 		:octave(o), scale(s), x(x), y(y), value(v) 
 	{
-		memset(hist, 0, sizeof(float) * 36);
-	};
+	}
+
+	Feature(const Feature& key, int ori)
+		:octave(key.octave), scale(key.scale), x(key.x), y(key.y), value(key.value), orientation(ori)
+	{
+	}
 } feature_t;
 
 
@@ -196,6 +206,8 @@ int gHeight[4];
 int gWStep[4];
 int gSize[4];
 double gSigma[4] = { 1.6, 1.6*sqrt(2), 3.2, 3.2*sqrt(2) };
+int gRadius[2];
+int gWindowSize[2];
 
 void BuildScaleSpace()
 {
@@ -709,17 +721,85 @@ void BuildGradient()
 	}
 }
 
+#define _2PI M_PI * 2
+void JudgeOrientation(feature_t& key)
+{
+	float hist[36];
+	memset(hist, 0, 36 * sizeof(float));
 
+	int window = key.scale - 1;
+	int imageIdx = key.octave * 2 + window;
+	int kx = key.x;
+	int ky = key.y;
+	int o = key.octave;
+	if (kx > gRadius[window] && kx < gWidth[o] - gRadius[window] && ky > gRadius[window] && ky < gHeight[o] - gRadius[window])
+	{
+		for (int r = 0; r < gWindowSize[window]; r++)
+		{
+			for (int c = 0; c < gWindowSize[window]; c++)
+			{
+				int x = kx - gRadius[window] + c;
+				int y = ky - gRadius[window] + r;
+				int deg = gGradientOrientation[imageIdx].GetAt(x, y) * 36 / _2PI;
+				if (deg < 0) deg += 36;
+				float mag = gGradientMagnitude[imageIdx].GetAt(x, y);
+				hist[deg] += mag * gWeight[window][r * gWindowSize[window] + c];
+			}
+		}
+	}
+	else
+	{
+		for (int r = 0; r < gWindowSize[window]; r++)
+		{
+			for (int c = 0; c < gWindowSize[window]; c++)
+			{
+				int x = max(0, min(kx - gRadius[window] + c, gWidth[o] - 1));
+				int y = max(0, min(ky - gRadius[window] + r, gHeight[o] - 1));
+				int deg = gGradientOrientation[imageIdx].GetAt(x, y) * 36 / _2PI;
+				if (deg < 0) deg += 36;
+				float mag = gGradientMagnitude[imageIdx].GetAt(x, y);
+				hist[deg] += mag * gWeight[window][r * gWindowSize[window] + c];
+			}
+		}
+	}
+
+	float max = FLT_MIN;
+	int theta = 0;
+
+	for (int i = 0; i < 36; i++)
+	{
+		if (hist[i] > max)
+		{
+			max = hist[i];
+			theta = i;
+		}
+	}
+
+	key.orientation = theta * _2PI / 36;
+
+	for (int i = 0; i < 36; i++)
+	{
+		if (hist[i] > hist[theta] * 0.64 && i != theta)
+		{
+			feature.push_back(feature_t(key, i * _2PI / 36));
+		}
+	}
+}
 
 void AssignOrientation()
 {
 	BuildGradient();
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
-
+		JudgeOrientation(*itr);
 	}
 }
 
+
+void DescriptingKey()
+{
+
+}
 
 LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 {
@@ -746,10 +826,10 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	BuildScaleSpace();
 	DiffrenceOfGaussian();
 	FindKeyPoint();
-	feature;
 	AccuratingKey();
 	AssignOrientation();
-	feature;
+	DescriptingKey();
+
 	return TRUE;
 }
 
@@ -842,18 +922,20 @@ void InitGradient()
 
 void InitWeight()
 {
-	int nRadius[2] = { (int)(3 * gSigma[1]), (int)(3 * gSigma[2]) };
-	int nWidth[2] = { (int)(nRadius[0] * 2 + 1), (int)(nRadius[1] * 2 + 1) };
-	gWeight[0] = new float[nWidth[0] * nWidth[0]];
-	gWeight[1] = new float[nWidth[1] * nWidth[1]];
+	gRadius[0] = (int)(3 * gSigma[1]);
+	gRadius[1] = (int)(3 * gSigma[2]);
+	gWindowSize[0] = (int)(gRadius[0] * 2 + 1);
+	gWindowSize[1] = (int)(gRadius[1] * 2 + 1);
+	gWeight[0] = new float[gWindowSize[0] * gWindowSize[0]];
+	gWeight[1] = new float[gWindowSize[1] * gWindowSize[1]];
 
 	for (int i = 0; i < 2; i++) {
-		for (int r = 0; r < nWidth[i]; r++)
+		for (int r = 0; r < gWindowSize[i]; r++)
 		{
-			gWeight[i][r * nWidth[i] + nRadius[i]] = expf(-(r - nRadius[i]) * (r - nRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
-			for (int c = 0; c < nWidth[i]; c++)
+			gWeight[i][r * gWindowSize[i] + gRadius[i]] = expf(-(r - gRadius[i]) * (r - gRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
+			for (int c = 0; c < gWindowSize[i]; c++)
 			{
-				gWeight[i][r * nWidth[i] + c] = gWeight[i][r * nWidth[i] + nRadius[i]] * expf(-(c - nRadius[i]) * (c - nRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
+				gWeight[i][r * gWindowSize[i] + c] = gWeight[i][r * gWindowSize[i] + gRadius[i]] * expf(-(c - gRadius[i]) * (c - gRadius[i]) / 4.5 * gSigma[i + 1] * gSigma[i + 1]);
 			}
 		}
 	}

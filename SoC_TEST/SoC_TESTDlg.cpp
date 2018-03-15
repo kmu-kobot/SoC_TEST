@@ -167,8 +167,14 @@ HCURSOR CSoCTESTDlg::OnQueryDragIcon()
 
 typedef struct Feature
 {
-	int octave, scale;
-	float x, y, value;
+	int octave;
+	int scale; // blured scale
+	float x; // loacl x
+	float y; // loack y
+	float value;
+
+	int nx; // normarized x
+	int ny; // normarized y
 
 	float orientation;
 	int vec[128];
@@ -204,6 +210,7 @@ CFloatImage gGradientMagnitude[8];
 CFloatImage gGradientOrientation[8];
 //CByteImage gKeyPoint[8];
 std::vector<feature_t> feature;
+std::vector<feature_t> feature_sub;
 std::vector<feature_t>::iterator itr;
 #define NUM_CHANNEL 1
 int gWidth[4];
@@ -457,6 +464,7 @@ void DiffrenceOfGaussian()
 void FindKeyPoint()
 {
 	feature.clear();
+	feature_sub.clear();
 
 	int x = 0;
 	for (int i = 0; i < 4; i++)
@@ -713,7 +721,7 @@ void BuildGradient()
 				{
 					dx = pSrc[c + 1] - pSrc[c - 1];
 					dy = pSrc[c + wstep] - pSrc[c - wstep];
-					pMag[c] = dx * dx - dy * dy; // no sqrt
+					pMag[c] = dx * dx + dy * dy; // no sqrt
 					pOri[c] = atan2(dy, dx);
 				}
 			}
@@ -727,7 +735,7 @@ void BuildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c + wstep] - pSrc[c]);
-				pMag[c] = dx * dx - dy * dy; // no sqrt
+				pMag[c] = dx * dx + dy * dy; // no sqrt
 				pOri[c] = atan2(dy, dx);
 			}
 
@@ -739,7 +747,7 @@ void BuildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c] - pSrc[c - wstep]);
-				pMag[c] = dx * dx - dy * dy; // no sqrt
+				pMag[c] = dx * dx + dy * dy; // no sqrt
 				pOri[c] = atan2(dy, dx);
 			}
 
@@ -751,7 +759,7 @@ void BuildGradient()
 			{
 				dx = 2.0f * (pSrc[r * wstep + 1] - pSrc[r * wstep]);
 				dy = pSrc[(r + 1) * wstep] - pSrc[(r - 1) * wstep];
-				pMag[r * wstep] = dx * dx - dy * dy; // no sqrt
+				pMag[r * wstep] = dx * dx + dy * dy; // no sqrt
 				pOri[r * wstep] = atan2(dy, dx);
 			}
 
@@ -763,7 +771,7 @@ void BuildGradient()
 			{
 				dx = 2.0f * (pSrc[r * wstep] - pSrc[r * wstep - 1]);
 				dy = pSrc[(r + 1) * wstep] - pSrc[(r - 1) * wstep];
-				pMag[r * wstep] = dx * dx - dy * dy; // no sqrt
+				pMag[r * wstep] = dx * dx + dy * dy; // no sqrt
 				pOri[r * wstep] = atan2(dy, dx);
 			}
 
@@ -777,23 +785,23 @@ void BuildGradient()
 
 			dx = 2.0f * (pSrc[1] - pSrc[0]);
 			dy = 2.0f * (pSrc[wstep] - pSrc[0]);
-			pMag[0] = dx * dx - dy * dy; // no sqrt
+			pMag[0] = dx * dx + dy * dy; // no sqrt
 			pOri[0] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[cLast] - pSrc[cLast - 1]);
 			dy = 2.0f * (pSrc[wstep + cLast] - pSrc[cLast]);
-			pMag[0] = dx * dx - dy * dy; // no sqrt
-			pOri[0] = atan2(dy, dx);
+			pMag[cLast] = dx * dx + dy * dy; // no sqrt
+			pOri[cLast] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * wstep + 1] - pSrc[rLast * wstep]);
 			dy = 2.0f * (pSrc[rLast * wstep] - pSrc[(rLast - 1) * wstep]);
-			pMag[0] = dx * dx - dy * dy; // no sqrt
-			pOri[0] = atan2(dy, dx);
+			pMag[rLast * wstep] = dx * dx + dy * dy; // no sqrt
+			pOri[rLast * wstep] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * wstep + cLast] - pSrc[rLast * wstep + cLast - 1]);
 			dy = 2.0f * (pSrc[rLast * wstep + cLast] - pSrc[(rLast - 1) * wstep + cLast]);
-			pMag[0] = dx * dx - dy * dy; // no sqrt
-			pOri[0] = atan2(dy, dx);
+			pMag[rLast * wstep + cLast] = dx * dx + dy * dy; // no sqrt
+			pOri[rLast * wstep + cLast] = atan2(dy, dx);
 
 			//ShowImage(gGradientMagnitude[GrdIdx], std::to_string(GrdIdx).c_str());
 		}
@@ -834,10 +842,10 @@ void JudgeOrientation(feature_t& key)
 			{
 				int x = max(0, min(kx - gRadius[window] + c, gWidth[o] - 1));
 				int y = max(0, min(ky - gRadius[window] + r, gHeight[o] - 1));
-				int deg = (int)(gGradientOrientation[imageIdx].GetAt(x, y) * 36.0f / _2PI);
-				if (deg < 0) deg += 36;
+				int ori = (int)(gGradientOrientation[imageIdx].GetAt(x, y) * 36.0f / _2PI);
+				if (ori < 0) ori += 36;
 				float mag = gGradientMagnitude[imageIdx].GetAt(x, y);
-				hist[deg] += mag * gWeight[window][r * gWindowSize[window] + c];
+				hist[ori] += mag * gWeight[window][r * gWindowSize[window] + c];
 			}
 		}
 	}
@@ -860,7 +868,7 @@ void JudgeOrientation(feature_t& key)
 	{
 		if (hist[i] > hist[theta] * 0.64f && i != theta)
 		{
-			//feature.push_back(feature_t(key, i * _2PI / 36.0f));
+			feature_sub.push_back(feature_t(key, i * _2PI / 36.0f));
 		}
 	}
 }
@@ -872,6 +880,8 @@ void AssignOrientation()
 	{
 		JudgeOrientation(*itr);
 	}
+	
+	feature.insert(feature.end(), feature_sub.begin(), feature_sub.end());
 }
 
 
@@ -895,9 +905,79 @@ void DescriptingKey()
 0.46323f, 0.516771f, 0.567561f, 0.61368f, 0.653259f, 0.68461f, 0.706342f, 0.717465f, 0.717465f, 0.706342f, 0.68461f, 0.653259f, 0.61368f, 0.567561f, 0.516771f, 0.46323f,
 0.415237f, 0.46323f, 0.508759f, 0.550099f, 0.585578f, 0.61368f, 0.633161f, 0.643131f, 0.643131f, 0.633161f, 0.61368f, 0.585578f, 0.550099f, 0.508759f, 0.46323f, 0.415237f };
 
-	float hist[8] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+	static float hist[8] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
+	for (itr = feature.begin(); itr != feature.end(); itr++)
+	{
+		int o = itr->octave; // key octave
+		int s = itr->scale; // key scale
+		int kx = (int)itr->x; // key x
+		int ky = (int)itr->y; // key y
+		float kori = itr->orientation; // key orientation
+		int idx = (o >> 1) + s - 1; // index of gradient array
+		int pos = 0; // index of 128 dimension vector
 
+		if (kx > 6 && kx < gWidth[o] - 8 && ky > 6 && ky < gHeight[o] - 8)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = i * 4;
+					int bigCol = j * 4;
+					for (int r = 0; r < 4; r++)
+					{
+						float* pMag = gGradientMagnitude[idx].GetPtr(ky - 7 + bigRow + r);
+						float* pOri = gGradientOrientation[idx].GetPtr(ky - 7 + bigRow + r);
+						for (int c = 0; c < 4; c++)
+						{
+							int ori = (int)((pOri[kx - 7 + bigCol + c] - kori) * 8.0f / _2PI);
+							float mag = pMag[kx - 7 + bigCol + c] * mask[bigRow + r][bigCol + c];
+							hist[ori] += mag;
+						}
+					}
+					for (int k = 0; k < 8; k++)
+					{
+						itr->vec[pos++] = (int)hist[k];
+					}
+					memset(hist, 0, 8 * sizeof(int));
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = i * 4;
+					int bigCol = j * 4;
+					for (int r = 0; r < 4; r++)
+					{
+						float* pMag = gGradientMagnitude[idx].GetPtr(min(0, max(ky - 7 + bigRow + r, gHeight[o] - 1)));
+						float* pOri = gGradientOrientation[idx].GetPtr(min(0, max(ky - 7 + bigRow + r, gHeight[o] - 1)));
+						for (int c = 0; c < 4; c++)
+						{
+							int ori = (int)((pOri[min(0, max(kx - 7 + bigCol + c, gWidth[i] - 1))] - kori) * 8.0f / _2PI);
+							float mag = pMag[min(0, max(kx - 7 + bigCol + c, gWidth[i] - 1))] * mask[bigRow + r][bigCol + c];
+							hist[ori] += mag;
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+						itr->vec[pos++] = (int)(hist[k] / (5.0f * max));
+					}
+					memset(hist, 0, 8 * sizeof(int));
+				}
+			}
+		}
+	}
 }
 
 LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
@@ -928,6 +1008,7 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	AccuratingKey();
 	AssignOrientation();
 	DescriptingKey();
+	feature_sub;
 
 	return TRUE;
 }

@@ -303,16 +303,16 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 //}
 
 //new
- int* boxesForGauss(double sigma, int n)  // standard deviation, number of boxes
+ int* boxesForGauss(float sigma, int n)  // standard deviation, number of boxes
 {
-	double widthIdeal = sqrt((12 * sigma*sigma / n) + 1);  // Ideal averaging filter width 
+	float widthIdeal = sqrt((12 * sigma*sigma / n) + 1);  // Ideal averaging filter width 
 
 	int widthLow = floor(widthIdeal); 
 	if (widthLow % 2 == 0) widthLow--;
 
 	int widthUp = widthLow + 2;
 
-	double mIdeal = (12 * sigma*sigma - n * widthLow*widthLow - 4 * n*widthLow - 3 * n) / (-4 * widthLow - 4);
+	float mIdeal = (12 * sigma*sigma - n * widthLow*widthLow - 4 * n*widthLow - 3 * n) / (-4 * widthLow - 4);
 	int m = round(mIdeal);
 	// var sigmaActual = Math.sqrt( (m*wl*wl + (n-m)*wu*wu - n)/12 );
 
@@ -321,7 +321,7 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 	return sizes;
 }
 
-void gaussBlur(CFloatImage& src, CFloatImage& dst, double sigma)
+void gaussBlur(CFloatImage& src, CFloatImage& dst, float sigma)
 {
 	int* bxs = boxesForGauss(sigma, 3);
 	int nWidth = src.GetWidth();
@@ -334,7 +334,7 @@ void gaussBlur(CFloatImage& src, CFloatImage& dst, double sigma)
 	boxBlur(pSrc, pDst, nWidth, nHeight, nWStep, (bxs[2] - 1) / 2);
 }
 
-void boxBlur(float* src, float* dst, int width, int height, int wstep, double radius)
+void boxBlur(float* src, float* dst, int width, int height, int wstep, float radius)
 {
 	memcpy(dst, src, wstep*height*sizeof(float));
 	boxBlurH(dst, src, width, height, wstep, radius);
@@ -343,9 +343,9 @@ void boxBlur(float* src, float* dst, int width, int height, int wstep, double ra
 
 
 
-void boxBlurH(float* src, float* dst, int width, int height, int wstep, double radius)
+void boxBlurH(float* src, float* dst, int width, int height, int wstep, float radius)
 {
-	double iarr = 1 / (radius + radius + 1);
+	float iarr = 1 / (radius + radius + 1);
 
 	for (int i = 0; i<height; i++) {
 
@@ -380,9 +380,9 @@ void boxBlurH(float* src, float* dst, int width, int height, int wstep, double r
 	}
 }
 
-void boxBlurT(float* src, float* dst, int width, int height, int wstep, double radius)
+void boxBlurT(float* src, float* dst, int width, int height, int wstep, float radius)
 {
-	double iarr = 1 / (radius + radius + 1);
+	float iarr = 1 / (radius + radius + 1);
 
 	for (int i = 0; i<width; i++) {
 

@@ -25,7 +25,7 @@ CMyImage<T> RGB2Gray(const CMyImage<T>& src)
 		for (int c=0 ; c<nWidth ; c++)
 		{
 //			pDst[c] = (pSrc[pos]+pSrc[pos+1]+pSrc[pos+2])*0.33333;
-			pDst[c] = 0.114*pSrc[pos]+0.587*pSrc[pos+1]+0.299*pSrc[pos+2];
+			pDst[c] = (int)(0.114*pSrc[pos]+0.587*pSrc[pos+1]+0.299*pSrc[pos+2]);
 			pos += 3;
 		}
 	}

@@ -377,7 +377,7 @@ public:
 		wLB = (xR - x)*(y - yT);
 		wRB = (x - xL)*(y - yT);
 
-		return (wLT*m_pImageData[yT*m_nWStep + xL] + wRT*m_pImageData[yT*m_nWStep + xR] + 
+		return (BYTE)(wLT*m_pImageData[yT*m_nWStep + xL] + wRT*m_pImageData[yT*m_nWStep + xR] + 
 				wLB*m_pImageData[yB*m_nWStep + xL] + wRB*m_pImageData[yB*m_nWStep + xR]);
 	}
 

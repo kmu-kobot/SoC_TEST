@@ -36,11 +36,12 @@ public:
 	CSIFT();
 	~CSIFT();
 	void SIFT();
-	void Init();				//	initialize image size, sigma, etc..
+	void Init(CByteImage& imageIn, int width, int height);	//	initialize image size, sigma, etc..
 private:
 	void BuildScaleSpace();		//	build scale space. it has 4 octave and 5 level.
 	void BuildDOG();			//	build diffrence of gaussian. it has 4 octave and 4 level.
 	void FindKeyPoint();		//	find key points in dog. key points are local max, local min value.
+	bool SubPixel(feature_t& key, int nAdjustment);			//	find key point's real number position.
 	void AccurategKey();		//	accurate key points.
 	void BuildGradient();		//	build gradient map. magnitude and orientation. it have 4 octave and 2 level.
 	void AssignOrientation();	//	assign key point's orientation.
@@ -53,7 +54,7 @@ private:
 	float** MagMap[8];			//	4 octave 2 level magnitude map. use each octave's 1, 2 level.
 	float** OriMap[8];			//	4 octave 2 level orientation map. use each octave's 1, 2 level.
 
-	float* weightMagnotue[2];	//	gaussian weight function mask. each sigma are 1.5 * level 1's sigma, 1.5 * level 2's sigma.
+	float* weightMagnitude[2];	//	gaussian weight function mask. each sigma are 1.5 * level 1's sigma, 1.5 * level 2's sigma.
 	float* weightDescript;		//	gaussian weight function mask. sigma is 8, 16 * 16 size.
 
 	int width[4];				//	each octave's width;
@@ -61,7 +62,7 @@ private:
 	int wstep[4];				//	each octave's wstep;
 	int size[4];				//	each octave's image size;
 	float sigma[4];				//	each level's sigma; it dosen't need level 0's sigma
-
+	float magSigma[2];			//	each sigma of magnitude weight kernel.
 	int radius[2];				//	each level weight mask's radius.
 	int wsize[2];				//	each level weight mask's window size.
 

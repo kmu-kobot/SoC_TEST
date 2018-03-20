@@ -33,8 +33,8 @@ CSIFT::CSIFT()
 	magSigma[1] = sigma[2] * 1.5f;
 	radius[0] = (int)magSigma[0] * 3;
 	radius[1] = (int)magSigma[1] * 3;
-	wsize[0] = (radius[0] >> 1) + 1;
-	wsize[1] = (radius[1] >> 1) + 1;
+	wsize[0] = (radius[0] << 1) + 1;
+	wsize[1] = (radius[1] << 1) + 1;
 }
 
 
@@ -117,16 +117,16 @@ void CSIFT::SIFT(CByteImage& imageIn)
 	m_imageIn = imageIn;
 	m_imageInGray = RGB2Gray(m_imageIn);
 
-	ShowImage(m_imageIn, "imageIn");
-	ShowImage(m_imageInGray, "imageInGray");
+	//ShowImage(m_imageIn, "imageIn");
+	//ShowImage(m_imageInGray, "imageInGray");
 
-	//BuildScaleSpace();
-	//BuildDOG();
-	//FindKeyPoint();
-	//AccurateKey();
-	//BuildGradient();
-	//AssignOrientation();
-	//DescriptKey();
+	BuildScaleSpace();
+	BuildDOG();
+	FindKeyPoint();
+	AccurateKey();
+	BuildGradient();
+	AssignOrientation();
+	DescriptKey();
 	//KeyMatching();
 
 	ShowKeyPoint();
@@ -480,8 +480,8 @@ void CSIFT::BuildGradient()
 				{
 					dx = pSrc[c + 1] - pSrc[c - 1];
 					dy = pSrc[c + wstep[i]] - pSrc[c - wstep[i]];
-					MagMap[GrdIdx][c] = dx * dx + dy * dy; // no sqrt
-					OriMap[GrdIdx][c] = atan2(dy, dx);
+					MagMap[GrdIdx][r * wstep[i] + c] = dx * dx + dy * dy; // no sqrt
+					OriMap[GrdIdx][r * wstep[i] + c] = atan2(dy, dx);
 				}
 			}
 
@@ -502,8 +502,8 @@ void CSIFT::BuildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c] - pSrc[c - wstep[i]]);
-				MagMap[GrdIdx][c] = dx * dx + dy * dy; // no sqrt
-				OriMap[GrdIdx][c] = atan2(dy, dx);
+				MagMap[GrdIdx][(height[i]-1) * wstep[i] + c] = dx * dx + dy * dy; // no sqrt
+				OriMap[GrdIdx][(height[i] - 1) * wstep[i] + c] = atan2(dy, dx);
 			}
 
 			//left out line
@@ -522,8 +522,8 @@ void CSIFT::BuildGradient()
 			{
 				dx = 2.0f * (pSrc[r * wstep[i]] - pSrc[r * wstep[i] - 1]);
 				dy = pSrc[(r + 1) * wstep[i]] - pSrc[(r - 1) * wstep[i]];
-				MagMap[GrdIdx][r * wstep[i]] = dx * dx + dy * dy; // no sqrt
-				OriMap[GrdIdx][r * wstep[i]] = atan2(dy, dx);
+				MagMap[GrdIdx][r * wstep[i] + width[i]-1] = dx * dx + dy * dy; // no sqrt
+				OriMap[GrdIdx][r * wstep[i] + width[i]-1] = atan2(dy, dx);
 			}
 
 
@@ -573,7 +573,7 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = kx - radius[window] + c;
 				int y = ky - radius[window] + r;
-				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / _2PI);
+				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / M_PI);
 				if (ori < 0) ori += 36;
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
@@ -587,7 +587,7 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = max(0, min(kx - radius[window] + c, width[o] - 1));
 				int y = max(0, min(ky - radius[window] + r, height[o] - 1));
-				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / _2PI);
+				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / M_PI);
 				if (ori < 0) ori += 36;
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
@@ -630,7 +630,7 @@ void CSIFT::AssignOrientation()
 void CSIFT::DescriptKey()
 {
 	static float hist[8];
-	memset(hist, 0.0f, 8 * sizeof(int));
+	memset(hist, 0.0f, 8 * sizeof(float));
 
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
@@ -656,7 +656,8 @@ void CSIFT::DescriptKey()
 						for (int c = 0; c < 4; c++)
 						{
 							int posX = idx + kx - 7 + bigCol + c;
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI);
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / M_PI);
+							if (ori < 0) ori += 8;
 							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}
@@ -664,7 +665,7 @@ void CSIFT::DescriptKey()
 					{
 						itr->vec[pos++] = (int)hist[k];
 					}
-					memset(hist, 0, 8 * sizeof(int));
+					memset(hist, 0.0f, 8 * sizeof(float));
 				}
 			}
 		}
@@ -682,7 +683,8 @@ void CSIFT::DescriptKey()
 						for (int c = 0; c < 4; c++)
 						{
 							int posX = min(0, max(kx - 7 + bigCol + c, width[i] - 1));
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI);
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / M_PI);
+							if (ori < 0) ori += 8;
 							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}

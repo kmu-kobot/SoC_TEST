@@ -991,25 +991,25 @@ void DescriptingKey()
 
 LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 {
-	//if (gBmpInfo.bmiHeader.biCompression == BI_RGB) // RGB 영상
-	//{
-		//memcpy(gImageBuf.GetPtr(), lpVHdr->lpData,
-			//gBmpInfo.bmiHeader.biHeight*gBmpInfo.bmikHeader.biWidth * 3);
-	//	gImageBufGray = RGB2Gray(gImageBuf);
-	//	//memcpy(gImageIn.GetPtr(), gImageIn.GetPtr(),
-	//	//	gImageIn.GetHeight()*gImageIn.GetWStep() * gImageIn.GetChannel());
-	//	//gImageBufGray = RGB2Gray(gImageIn);
-	//}
-	//else if (gBmpInfo.bmiHeader.biCompression == MAKEFOURCC('Y', 'U', 'Y', '2')) // 16비트 영상
-	//{
-	//	YUY2ToRGB24(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight,
-	//		lpVHdr->lpData, gImageBuf.GetPtr());
-	//	ShowImage(gImageBuf, "YUY2");
-	//}
-	//else
-	//{
-	//	return FALSE;
-	//}
+	if (gBmpInfo.bmiHeader.biCompression == BI_RGB) // RGB 영상
+	{
+		memcpy(gImageBuf.GetPtr(), lpVHdr->lpData,
+			gBmpInfo.bmiHeader.biHeight*gBmpInfo.bmiHeader.biWidth * 3);
+		gImageBufGray = RGB2Gray(gImageBuf);
+		//memcpy(gImageIn.GetPtr(), gImageIn.GetPtr(),
+		//	gImageIn.GetHeight()*gImageIn.GetWStep() * gImageIn.GetChannel());
+		//gImageBufGray = RGB2Gray(gImageIn);
+	}
+	else if (gBmpInfo.bmiHeader.biCompression == MAKEFOURCC('Y', 'U', 'Y', '2')) // 16비트 영상
+	{
+		YUY2ToRGB24(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight,
+			lpVHdr->lpData, gImageBuf.GetPtr());
+		ShowImage(gImageBuf, "YUY2");
+	}
+	else
+	{
+		return FALSE;
+	}
 
 	//BuildScaleSpace();
 	//DiffrenceOfGaussian();
@@ -1020,6 +1020,7 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	//feature_sub;
 
 	m_SIFT.SIFT(gImageBuf);
+	
 
 	return TRUE;
 }

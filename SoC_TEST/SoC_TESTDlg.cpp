@@ -17,6 +17,9 @@
 #include "LoadImageFromFileDialog.h"
 #include "MyImageFunc.h"
 #include "VideoProcessing.h"
+#include "SIFT.h"
+
+#define CLASS
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -165,62 +168,66 @@ HCURSOR CSoCTESTDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-typedef struct Feature
-{
-	int octave;
-	int scale; // blured scale
-	float x; // loacl x
-	float y; // loack y
-	float value;
+//typedef struct Feature
+//{
+//	int octave;
+//	int scale; // blured scale
+//	float x; // loacl x
+//	float y; // loack y
+//	float value;
+//
+//	int nx; // normarized x
+//	int ny; // normarized y
+//
+//	float orientation;
+//	int vec[128];
+//
+//	Feature(int o, int s, float x, float y, float v)
+//		:octave(o), scale(s), x(x), y(y), value(v) 
+//	{
+//	}
+//
+//	Feature(int o, int s, int x, int y, float v)
+//		:octave(o), scale(s), x((float)x), y((float)y), value(v)
+//	{
+//	}
+//
+//	Feature(const Feature& key, float ori)
+//		:octave(key.octave), scale(key.scale), x(key.x), y(key.y), value(key.value), orientation(ori)
+//	{
+//	}
+//} feature_t;
 
-	int nx; // normarized x
-	int ny; // normarized y
 
-	float orientation;
-	int vec[128];
-
-	Feature(int o, int s, float x, float y, float v)
-		:octave(o), scale(s), x(x), y(y), value(v) 
-	{
-	}
-
-	Feature(int o, int s, int x, int y, float v)
-		:octave(o), scale(s), x((float)x), y((float)y), value(v)
-	{
-	}
-
-	Feature(const Feature& key, float ori)
-		:octave(key.octave), scale(key.scale), x(key.x), y(key.y), value(key.value), orientation(ori)
-	{
-	}
-} feature_t;
-
-
-float* gWeight[2];
 CByteImage gImageBuf;
 CByteImage gImageOut;
 CByteImage gImageBufGray;
-//CByteImage gImageIn;
+////CByteImage gImageIn;
 BITMAPINFO gBmpInfo;
-CFloatImage gScaleTemp[4];
-CFloatImage gScaleSpace[20];
-CByteImage gScaleOriginal[4];
-CFloatImage gDOG[16];
-CFloatImage gGradientMagnitude[8];
-CFloatImage gGradientOrientation[8];
-//CByteImage gKeyPoint[8];
-std::vector<feature_t> feature;
-std::vector<feature_t> feature_sub;
-std::vector<feature_t>::iterator itr;
-#define NUM_CHANNEL 1
-int gWidth[4];
-int gHeight[4];
-int gWStep[4];
-int gSize[4];
-float gSigma[4] = { 1.6f, 1.6f * (float)sqrt(2), 3.2f, 3.2f * (float)sqrt(2) };
-int gRadius[2];
-int gWindowSize[2];
+//CFloatImage gScaleTemp[4];
+//CFloatImage gScaleSpace[20];
+//CByteImage gScaleOriginal[4];
+//CFloatImage gDOG[16];
+//CFloatImage gGradientMagnitude[8];
+//CFloatImage gGradientOrientation[8];
+////CByteImage gKeyPoint[8];
+//std::vector<feature_t> feature;
+//std::vector<feature_t> feature_sub;
+//std::vector<feature_t>::iterator itr;
+//#define NUM_CHANNEL 1
+//int gWidth[4];
+//int gHeight[4];
+//int gWStep[4];
+//int gSize[4];
+//float gSigma[4] = { 1.6f, 1.6f * (float)sqrt(2), 3.2f, 3.2f * (float)sqrt(2) };
+//float* gWeight[2];
+//int gRadius[2];
+//int gWindowSize[2];
 
+CSIFT m_SIFT;
+
+
+#ifndef CLASS
 void BuildScaleSpace()
 {
 
@@ -980,40 +987,44 @@ void DescriptingKey()
 	}
 }
 
+#endif
+
 LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 {
-	if (gBmpInfo.bmiHeader.biCompression == BI_RGB) // RGB 영상
-	{
-		memcpy(gImageBuf.GetPtr(), lpVHdr->lpData,
-			gBmpInfo.bmiHeader.biHeight*gBmpInfo.bmiHeader.biWidth * 3);
-		gImageBufGray = RGB2Gray(gImageBuf);
-		//memcpy(gImageIn.GetPtr(), gImageIn.GetPtr(),
-		//	gImageIn.GetHeight()*gImageIn.GetWStep() * gImageIn.GetChannel());
-		//gImageBufGray = RGB2Gray(gImageIn);
-	}
-	else if (gBmpInfo.bmiHeader.biCompression == MAKEFOURCC('Y', 'U', 'Y', '2')) // 16비트 영상
-	{
-		YUY2ToRGB24(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight,
-			lpVHdr->lpData, gImageBuf.GetPtr());
-		ShowImage(gImageBuf, "YUY2");
-	}
-	else
-	{
-		return FALSE;
-	}
+	//if (gBmpInfo.bmiHeader.biCompression == BI_RGB) // RGB 영상
+	//{
+		//memcpy(gImageBuf.GetPtr(), lpVHdr->lpData,
+			//gBmpInfo.bmiHeader.biHeight*gBmpInfo.bmikHeader.biWidth * 3);
+	//	gImageBufGray = RGB2Gray(gImageBuf);
+	//	//memcpy(gImageIn.GetPtr(), gImageIn.GetPtr(),
+	//	//	gImageIn.GetHeight()*gImageIn.GetWStep() * gImageIn.GetChannel());
+	//	//gImageBufGray = RGB2Gray(gImageIn);
+	//}
+	//else if (gBmpInfo.bmiHeader.biCompression == MAKEFOURCC('Y', 'U', 'Y', '2')) // 16비트 영상
+	//{
+	//	YUY2ToRGB24(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight,
+	//		lpVHdr->lpData, gImageBuf.GetPtr());
+	//	ShowImage(gImageBuf, "YUY2");
+	//}
+	//else
+	//{
+	//	return FALSE;
+	//}
 
-	BuildScaleSpace();
-	DiffrenceOfGaussian();
-	FindKeyPoint();
-	AccuratingKey();
-	AssignOrientation();
-	DescriptingKey();
-	feature_sub;
+	//BuildScaleSpace();
+	//DiffrenceOfGaussian();
+	//FindKeyPoint();
+	//AccuratingKey();
+	//AssignOrientation();
+	//DescriptingKey();
+	//feature_sub;
+
+	m_SIFT.SIFT(gImageBuf);
 
 	return TRUE;
 }
 
-
+#ifndef CLASS
 void InitScaleSpace()
 {
 	gWidth[0] = gBmpInfo.bmiHeader.biWidth << 1;
@@ -1116,7 +1127,7 @@ void InitWeight()
 		7.77661e-05f, 0.000404645f, 0.00176995f, 0.00650801f, 0.0201158f, 0.0522671f, 0.114162f, 0.209611f, 0.323527f, 0.419767f, 0.457833f, 0.419767f, 0.323527f, 0.209611f, 0.114162f, 0.0522671f, 0.0201158f, 0.00650801f, 0.00176995f, 0.000404645f, 7.77661e-05f,
 		0.000120029f, 0.000624555f, 0.00273185f, 0.0100449f, 0.031048f, 0.0806722f, 0.176204f, 0.323527f, 0.499352f, 0.647894f, 0.706648f, 0.647894f, 0.499352f, 0.323527f, 0.176204f, 0.0806722f, 0.031048f, 0.0100449f, 0.00273185f, 0.000624555f, 0.000120029f,
 		0.000155734f, 0.000810341f, 0.00354449f, 0.0130329f, 0.0402838f, 0.10467f, 0.22862f, 0.419767f, 0.647894f, 0.840624f, 0.916855f, 0.840624f, 0.647894f, 0.419767f, 0.22862f, 0.10467f, 0.0402838f, 0.0130329f, 0.00354449f, 0.000810341f, 0.000155734f,
-		0.000169857f, 0.000883827f, 0.00386592f, 0.0142148f, 0.0439369f, 0.114162f, 0.249352f, 0.457833f, 0.706648f, 0.916855f, 1f, 0.916855f, 0.706648f, 0.457833f, 0.249352f, 0.114162f, 0.0439369f, 0.0142148f, 0.00386592f, 0.000883827f, 0.000169857f,
+		0.000169857f, 0.000883827f, 0.00386592f, 0.0142148f, 0.0439369f, 0.114162f, 0.249352f, 0.457833f, 0.706648f, 0.916855f, 1.0f, 0.916855f, 0.706648f, 0.457833f, 0.249352f, 0.114162f, 0.0439369f, 0.0142148f, 0.00386592f, 0.000883827f, 0.000169857f,
 		0.000155734f, 0.000810341f, 0.00354449f, 0.0130329f, 0.0402838f, 0.10467f, 0.22862f, 0.419767f, 0.647894f, 0.840624f, 0.916855f, 0.840624f, 0.647894f, 0.419767f, 0.22862f, 0.10467f, 0.0402838f, 0.0130329f, 0.00354449f, 0.000810341f, 0.000155734f,
 		0.000120029f, 0.000624555f, 0.00273185f, 0.0100449f, 0.031048f, 0.0806722f, 0.176204f, 0.323527f, 0.499352f, 0.647894f, 0.706648f, 0.647894f, 0.499352f, 0.323527f, 0.176204f, 0.0806722f, 0.031048f, 0.0100449f, 0.00273185f, 0.000624555f, 0.000120029f,
 		7.77661e-05f, 0.000404645f, 0.00176995f, 0.00650801f, 0.0201158f, 0.0522671f, 0.114162f, 0.209611f, 0.323527f, 0.419767f, 0.457833f, 0.419767f, 0.323527f, 0.209611f, 0.114162f, 0.0522671f, 0.0201158f, 0.00650801f, 0.00176995f, 0.000404645f, 7.77661e-05f,
@@ -1142,7 +1153,7 @@ void InitWeight()
 		0.000136721f, 0.00044134f, 0.00130621f, 0.00354449f, 0.00881851f, 0.0201158f, 0.0420707f, 0.0806722f, 0.14183f, 0.22862f, 0.337878f, 0.457833f, 0.568794f, 0.647894f, 0.676634f, 0.647894f, 0.568794f, 0.457833f, 0.337878f, 0.22862f, 0.14183f, 0.0806722f, 0.0420707f, 0.0201158f, 0.00881851f, 0.00354449f, 0.00130621f, 0.00044134f, 0.000136721f,
 		0.000169857f, 0.000548304f, 0.00162279f, 0.00440354f, 0.0109558f, 0.0249911f, 0.0522671f, 0.100224f, 0.176204f, 0.284029f, 0.419767f, 0.568794f, 0.706648f, 0.804919f, 0.840624f, 0.804919f, 0.706648f, 0.568794f, 0.419767f, 0.284029f, 0.176204f, 0.100224f, 0.0522671f, 0.0249911f, 0.0109558f, 0.00440354f, 0.00162279f, 0.000548304f, 0.000169857f,
 		0.000193478f, 0.000624555f, 0.00184846f, 0.00501592f, 0.0124793f, 0.0284665f, 0.0595356f, 0.114162f, 0.200708f, 0.323527f, 0.478142f, 0.647894f, 0.804919f, 0.916855f, 0.957526f, 0.916855f, 0.804919f, 0.647894f, 0.478142f, 0.323527f, 0.200708f, 0.114162f, 0.0595356f, 0.0284665f, 0.0124793f, 0.00501592f, 0.00184846f, 0.000624555f, 0.000193478f,
-		0.00020206f, 0.000652259f, 0.00193046f, 0.00523842f, 0.0130329f, 0.0297292f, 0.0621765f, 0.119226f, 0.209611f, 0.337878f, 0.499352f, 0.676634f, 0.840624f, 0.957526f, 1f, 0.957526f, 0.840624f, 0.676634f, 0.499352f, 0.337878f, 0.209611f, 0.119226f, 0.0621765f, 0.0297292f, 0.0130329f, 0.00523842f, 0.00193046f, 0.000652259f, 0.00020206f,
+		0.00020206f, 0.000652259f, 0.00193046f, 0.00523842f, 0.0130329f, 0.0297292f, 0.0621765f, 0.119226f, 0.209611f, 0.337878f, 0.499352f, 0.676634f, 0.840624f, 0.957526f, 1.0f, 0.957526f, 0.840624f, 0.676634f, 0.499352f, 0.337878f, 0.209611f, 0.119226f, 0.0621765f, 0.0297292f, 0.0130329f, 0.00523842f, 0.00193046f, 0.000652259f, 0.00020206f,
 		0.000193478f, 0.000624555f, 0.00184846f, 0.00501592f, 0.0124793f, 0.0284665f, 0.0595356f, 0.114162f, 0.200708f, 0.323527f, 0.478142f, 0.647894f, 0.804919f, 0.916855f, 0.957526f, 0.916855f, 0.804919f, 0.647894f, 0.478142f, 0.323527f, 0.200708f, 0.114162f, 0.0595356f, 0.0284665f, 0.0124793f, 0.00501592f, 0.00184846f, 0.000624555f, 0.000193478f,
 		0.000169857f, 0.000548304f, 0.00162279f, 0.00440354f, 0.0109558f, 0.0249911f, 0.0522671f, 0.100224f, 0.176204f, 0.284029f, 0.419767f, 0.568794f, 0.706648f, 0.804919f, 0.840624f, 0.804919f, 0.706648f, 0.568794f, 0.419767f, 0.284029f, 0.176204f, 0.100224f, 0.0522671f, 0.0249911f, 0.0109558f, 0.00440354f, 0.00162279f, 0.000548304f, 0.000169857f,
 		0.000136721f, 0.00044134f, 0.00130621f, 0.00354449f, 0.00881851f, 0.0201158f, 0.0420707f, 0.0806722f, 0.14183f, 0.22862f, 0.337878f, 0.457833f, 0.568794f, 0.647894f, 0.676634f, 0.647894f, 0.568794f, 0.457833f, 0.337878f, 0.22862f, 0.14183f, 0.0806722f, 0.0420707f, 0.0201158f, 0.00881851f, 0.00354449f, 0.00130621f, 0.00044134f, 0.000136721f,
@@ -1160,6 +1171,8 @@ void InitWeight()
 	
 	gWeight[1] = weight2;
 }
+#endif
+
 
 void CSoCTESTDlg::OnBnClickedButtonCamStart()
 {
@@ -1170,10 +1183,12 @@ void CSoCTESTDlg::OnBnClickedButtonCamStart()
 	//GetDlgItem(IDC_STATIC_RESULT)->SetWindowPos(NULL, 0, 0, );
 	gImageBuf = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
 	gImageOut = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
-	InitScaleSpace();
-	InitDOG();
-	InitGradient();
-	InitWeight();
+	m_SIFT = CSIFT();
+	m_SIFT.Init(320, 240);
+	//InitScaleSpace();
+	//InitDOG();
+	//InitGradient();
+	//InitWeight();
 	m_webCam.SetCallBackOnFrame(ProcessCamFrame);
 }
 

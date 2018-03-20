@@ -1,1 +1,3 @@
-﻿  SoC_TEST.vcxproj -> C:\Users\1oooo\Desktop\SOC\SoC_TEST\x64\Debug\SoC_TEST.exe
+﻿  SIFT.cpp
+c:\users\thdtj\onedrive\문서\github\soc_test\soc_test\sift.cpp(633): warning C4244: '인수': 'float'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  SoC_TEST.vcxproj -> C:\Users\thdtj\OneDrive\문서\GitHub\SoC_TEST\SoC_TEST\x64\Debug\SoC_TEST.exe

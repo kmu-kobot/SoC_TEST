@@ -224,7 +224,7 @@ BITMAPINFO gBmpInfo;
 //int gRadius[2];
 //int gWindowSize[2];
 
-CSIFT m_SIFT;
+CSIFT* m_SIFT;
 
 
 #ifndef CLASS
@@ -1019,7 +1019,8 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	//DescriptingKey();
 	//feature_sub;
 
-	m_SIFT.SIFT(gImageBuf);
+	m_SIFT->SIFT(gImageBuf);
+	m_SIFT->KeyMatching();
 	
 
 	return TRUE;
@@ -1183,9 +1184,11 @@ void CSoCTESTDlg::OnBnClickedButtonCamStart()
 	//gImageIn = LoadImageFromDialog();
 	//GetDlgItem(IDC_STATIC_RESULT)->SetWindowPos(NULL, 0, 0, );
 	gImageBuf = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
-	gImageOut = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
-	m_SIFT = CSIFT();
-	m_SIFT.Init(320, 240);
+	//gImageOut = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
+	CByteImage confidence = LoadImageFromDialog();
+	m_SIFT = new CSIFT();
+	m_SIFT->BuildCmp(confidence);
+	m_SIFT->Init(320, 240);
 	//InitScaleSpace();
 	//InitDOG();
 	//InitGradient();
@@ -1198,4 +1201,5 @@ void CSoCTESTDlg::OnBnClickedButtonCamStop()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	m_webCam.StopCam();
+	delete[] m_SIFT;
 }

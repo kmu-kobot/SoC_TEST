@@ -17,17 +17,47 @@ typedef struct Feature
 	int ny;					//	normaized y;
 
 	float orientation;		//	feature's orientation.
-	int vec[128];			//	key's 128 dimension vector.
+	float vec[128];			//	key's 128 dimension vector.
+
+	Feature()
+	{}
 
 	Feature(int o, int l, float x, float y, float v)
-		:octave(o), level(l), x(x), y(y), value(v) {};
+		:octave(o), level(l), x(x), y(y), value(v) 
+	{
+		if (!octave)
+		{
+			nx = (int)x >> 1;
+			ny = (int)y >> 1;
+		}
+		else
+		{
+			nx = (int)x << (level - 1);
+			ny = (int)y << (level - 1);
+		}
+	}
 
 	Feature(int o, int l, int x, int y, float v)
 		:octave(o), level(l), x((float)x), y((float)y), value(v)
-	{}
+	{
+		if (!octave)
+		{
+			nx = (int)x >> 1;
+			ny = (int)y >> 1;
+		}
+		else
+		{
+			nx = (int)x << (level - 1);
+			ny = (int)y << (level - 1);
+		}
+	}
 	
 	Feature(const Feature& key, float ori)
-		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), orientation(ori)
+		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(ori)
+	{}
+
+	Feature(const Feature& key)
+		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(key.orientation)
 	{}
 } feature_t;
 
@@ -37,7 +67,9 @@ public:
 	CSIFT();
 	~CSIFT();
 	void SIFT(CByteImage& imageIn);
-	void Init( int width, int height);	//	initialize image size, sigma, etc..
+	void Init(int width, int height);	//	initialize image size, sigma, etc..
+	void BuildCmp(CByteImage& image);
+	void KeyMatching();			//	match key points.
 private:
 	void BuildScaleSpace();		//	build scale space. it has 4 octave and 5 level.
 	void BuildDOG();			//	build diffrence of gaussian. it has 4 octave and 4 level.
@@ -48,12 +80,14 @@ private:
 	void JudgeOrientation(feature_t& key);	//	judge orientation of key point.
 	void AssignOrientation();	//	assign key point's orientation.
 	void DescriptKey();			//	descript key point's 128 dimension vector.
-	//void KeyMatching();			//	match key points.
 	void ShowKeyPoint();
+	void CopyCmp();
 
 	CByteImage m_imageIn;		//	input image
 	CByteImage m_imageInGray;	//	gray imput image
 	CByteImage imageInX2;		//	input image double size.
+	CByteImage m_imageOut;
+	CByteImage m_imageCmp;
 	CFloatImage ScaleSpace[20];	//	4 octave 5 level scale space.
 	CFloatImage ScaleTemp[4];	//	each 4 octave's image buffer
 	CFloatImage DOG[16];		//	4 octave 4 level diffrence of gaussian.
@@ -75,5 +109,7 @@ private:
 	std::vector<feature_t> feature;			//	main key point vector.
 	std::vector<feature_t> feature_sub;		//	sub key point vector. if any key point has another orientation, push back in this vector.
 	std::vector<feature_t>::iterator itr;	//	key point vector's iterator.
+	std::vector<feature_t>::iterator itr2;	//	
+	std::vector<feature_t> feature_cmp;
 };
 

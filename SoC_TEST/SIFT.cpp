@@ -16,7 +16,7 @@
 #define LEVEL_NUM_DOG 4
 #define LEVEL_NUM_LE 2
 #define ROOT2 1.4142135623730950488016887242097f
-#define _2PI (float)M_PI * 2.0f
+#define _2PI ((float)M_PI * 2.0f)
 #define SIGMA 1.6f
 #define DES_SIGMA 8.0f
 #define DES_SIZE 16
@@ -39,20 +39,40 @@ CSIFT::CSIFT()
 
 
 CSIFT::~CSIFT()
-{/*
-	delete[] weightMagnitude;
-		delete[] MagMap;
-		delete[] OriMap;
-	for (itr = feature.begin(); itr != feature.end(); itr++)
-	{
-		delete &itr;
-	}
+{
+	//delete [] weightMagnitude[0];
+	//delete [] weightMagnitude[1];
+
+	//for (int i = 0; i < 8; i++)
+	//{
+		//delete[] MagMap[i];
+		//delete[] OriMap[i];
+	//}
+	//for (itr = feature.begin(); itr != feature.end(); itr++)
+	//{
+	//	delete &itr;
+	//}
 	feature.clear();
-	for (itr = feature_sub.begin(); itr != feature_sub.end(); itr++)
+	//for (itr = feature_sub.begin(); itr != feature_sub.end(); itr++)
+	//{
+	//	delete &itr;
+	//}
+	feature_sub.clear();
+}
+
+void CSIFT::BuildCmp(CByteImage& image)
+{
+	int width = image.GetWidth();
+	int height = image.GetHeight();
+	int wstep = image.GetWStep();
+	m_imageCmp = CByteImage(width, height, image.GetChannel());
+	for (int r = 0; r < height; r++)
 	{
-		delete &itr;
+		memcpy(m_imageCmp.GetPtr(r), image.GetPtr(r), wstep * sizeof(BYTE));
 	}
-	feature_sub.clear();*/
+	Init(width, height);
+	SIFT(image);
+	CopyCmp();
 }
 
 void CSIFT::SIFT(CByteImage& imageIn)
@@ -127,9 +147,7 @@ void CSIFT::SIFT(CByteImage& imageIn)
 	BuildGradient();
 	AssignOrientation();
 	DescriptKey();
-	//KeyMatching();
-
-	ShowKeyPoint();
+	//ShowKeyPoint();
 }
 
 #ifdef STATIC_SIZE
@@ -573,7 +591,7 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = kx - radius[window] + c;
 				int y = ky - radius[window] + r;
-				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / M_PI);
+				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 36.0f) / _2PI);
 				if (ori < 0) ori += 36;
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
@@ -587,7 +605,7 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = max(0, min(kx - radius[window] + c, width[o] - 1));
 				int y = max(0, min(ky - radius[window] + r, height[o] - 1));
-				int ori = (int)(OriMap[imageIdx][y * wstep[o] + x] * 36.0f / M_PI);
+				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 36.0f) / _2PI);
 				if (ori < 0) ori += 36;
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
@@ -630,7 +648,6 @@ void CSIFT::AssignOrientation()
 void CSIFT::DescriptKey()
 {
 	static float hist[8];
-	memset(hist, 0.0f, 8 * sizeof(float));
 
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
@@ -650,40 +667,14 @@ void CSIFT::DescriptKey()
 				{
 					int bigRow = i * 4;
 					int bigCol = j * 4;
+					memset(hist, 0.0f, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
 						int posY = (ky - 7 + bigRow + r) * wstep[o];
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = idx + kx - 7 + bigCol + c;
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / M_PI);
-							if (ori < 0) ori += 8;
-							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					for (int k = 0; k < 8; k++)
-					{
-						itr->vec[pos++] = (int)hist[k];
-					}
-					memset(hist, 0.0f, 8 * sizeof(float));
-				}
-			}
-		}
-		else
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					int bigRow = i * 4;
-					int bigCol = j * 4;
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = min(0, max(ky - 7 + bigRow + r, height[o] - 1));
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = min(0, max(kx - 7 + bigCol + c, width[i] - 1));
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / M_PI);
+							int posX = idx + kx - 7 + bigCol + c;gosemvhs9
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI + 0.5f);
 							if (ori < 0) ori += 8;
 							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
@@ -696,12 +687,162 @@ void CSIFT::DescriptKey()
 					}
 					for (int k = 0; k < 8; k++)
 					{
-						itr->vec[pos++] = (int)(hist[k] / (5.0f * max));
+						itr->vec[pos++] = hist[k] / (5.0f * max);
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = i * 4;
+					int bigCol = j * 4;
+					memset(hist, 0.0f, 8 * sizeof(float));
+					for (int r = 0; r < 4; r++)
+					{
+						int posY = min(0, max(ky - 7 + bigRow + r, height[o] - 1));
+						for (int c = 0; c < 4; c++)
+						{
+							int posX = min(0, max(kx - 7 + bigCol + c, width[i] - 1));
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI + 0.5f);
+							if (ori < 0) ori += 8;
+							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+						itr->vec[pos++] = hist[k] / (5.0f * max);
 					}
 				}
 			}
 		}
 	}
+}
+
+void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
+{
+	ASSERT(canvas.GetChannel() == 3);
+
+	int xs, ys, xe, ye;
+	if (x1 == x2) // 수직선
+	{
+		if (y1 < y2) { ys = y1; ye = y2; }
+		else { ys = y2; ye = y1; }
+		for (int r = ys; r <= ye; r++)
+		{
+			canvas.GetAt(x1, r, 0) = B;
+			canvas.GetAt(x1, r, 1) = G;
+			canvas.GetAt(x1, r, 2) = R;
+		}
+		return;
+	}
+
+	double a = (double)(y2 - y1) / (x2 - x1); // 기울기
+	int nHeight = canvas.GetHeight();
+
+	if ((a>-1) && (a<1)) // 가로축에 가까움
+	{
+		if (x1 < x2) { xs = x1; xe = x2; ys = y1; ye = y2; }
+		else { xs = x2; xe = x1; ys = y2; ye = y1; }
+		for (int c = xs; c <= xe; c++)
+		{
+			int r = (int)(a*(c - xs) + ys + 0.5);
+			if (r<0 || r >= nHeight)
+				continue;
+			canvas.GetAt(c, r, 0) = B;
+			canvas.GetAt(c, r, 1) = G;
+			canvas.GetAt(c, r, 2) = R;
+		}
+	}
+	else // 세로축에 가까움
+	{
+		double invA = 1.0 / a;
+		if (y1 < y2) { ys = y1; ye = y2; xs = x1; xe = x2; }
+		else { ys = y2; ye = y1; xs = x2; xe = x1; }
+		for (int r = ys; r <= ye; r++)
+		{
+			int c = (int)(invA*(r - ys) + xs + 0.5);
+			if (r<0 || r >= nHeight)
+				continue;
+			canvas.GetAt(c, r, 0) = B;
+			canvas.GetAt(c, r, 1) = G;
+			canvas.GetAt(c, r, 2) = R;
+		}
+	}
+}
+
+float _CalcSIFTSqDist(const feature_t& k1, const feature_t& k2)
+{
+	const float *pk1, *pk2;
+
+	pk1 = k1.vec;
+	pk2 = k2.vec;
+
+	float dif;
+	float distsq = 0;
+	for (int i = 0; i<128; i++)
+	{
+		dif = pk1[i] - pk2[i];
+		distsq += dif * dif;
+	}
+	return distsq;
+}
+
+
+void CSIFT::KeyMatching()
+{
+	m_imageOut = CByteImage(width[1] + m_imageCmp.GetWidth(), max(height[1], m_imageCmp.GetHeight()), 3);
+	int wstep = m_imageIn.GetWStep();
+	for (int r = 0; r < 200; r++)
+	{
+		memcpy(m_imageOut.GetPtr(r), m_imageIn.GetPtr(height[1] - r - 1), wstep * sizeof(BYTE));
+		memcpy(m_imageOut.GetPtr(r, 320 * 3), m_imageCmp.GetPtr(r), m_imageCmp.GetWStep() * sizeof(BYTE));
+	}
+	for (int r = 200; r < 240; r++)
+	{
+		memcpy(m_imageOut.GetPtr(r), m_imageIn.GetPtr(height[1] - r - 1), wstep * sizeof(BYTE));
+	}
+
+	for (itr = feature.begin(); itr != feature.end(); itr++)
+	{
+		__int64 minDist1 = 18446744073709551615, minDist2 = 18446744073709551615;
+
+		for (itr2 = feature_cmp.begin(); itr2 != feature_cmp.end(); itr2++)
+		{
+			__int64 distSq = _CalcSIFTSqDist(*itr, *itr2);
+
+			if (distSq < minDist1) // 가장 가까운 특징점 갱신
+			{
+				minDist2 = minDist1;
+				minDist1 = distSq;
+			}
+			else if (distSq < minDist2) // 두번째로 가까운 특징점 갱신
+			{
+				minDist2 = distSq;
+			}
+		}
+
+		if (minDist1 < minDist2 * 0.64) // 유효한 대응 관계 판단
+		{
+			int x1 = itr->nx;
+			int y1 = itr->ny;
+			int x2 = itr2->nx;
+			int y2 = itr2->ny;
+			DrawLine(m_imageOut, x1, x2,
+				x2 + width[1], y2, 255, 0, 0);
+		}
+	}
+	ShowImage(m_imageOut, "result");
+
 }
 
 void CSIFT::ShowKeyPoint()
@@ -725,4 +866,11 @@ void CSIFT::ShowKeyPoint()
 		out[pos + 2] = 255;
 	}
 	ShowImage(imageOut, "keyPoints");
+}
+
+void CSIFT::CopyCmp()
+{
+	feature_cmp.clear();
+	feature_cmp.resize(feature.size());
+	std::copy(feature.begin(), feature.end(), feature_cmp.begin());
 }

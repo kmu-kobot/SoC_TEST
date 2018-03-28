@@ -22,7 +22,7 @@
 #define DES_SIZE 16
 #define DES_RADIUS 7.5f
 #define VEC_ORI_NUM 8
-#define KEY_THRES 0.8f
+#define KEY_THRES 0.1f
 #define DIST_THRES 0.8f
 
 #define BOX
@@ -147,7 +147,7 @@ void CSIFT::SIFT(CByteImage& imageIn)
 	BuildScaleSpace();
 	BuildDOG();
 	FindKeyPoint();
-	//AccurateKey();
+	AccurateKey();
 	BuildGradient();
 	AssignOrientation();
  	DescriptKey();
@@ -682,7 +682,7 @@ void CSIFT::DescriptKey()
 						int posY = (ky - 7 + bigRow + r) * wstep[o];
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = idx + kx - 7 + bigCol + c;
+							int posX = kx - 7 + bigCol + c;
 							int ori = (int)((OriMap[idx][posY + posX] - kori) * 180 / M_PI);
 							if (ori < 0) ori += 360;
 
@@ -715,10 +715,10 @@ void CSIFT::DescriptKey()
 					memset(hist, 0, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
-						int posY = min(0, max(ky - 7 + bigRow + r, height[o] - 1));
+						int posY = max(0, min(ky - 7 + bigRow + r, height[o] - 1));
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = min(0, max(kx - 7 + bigCol + c, width[i] - 1));
+							int posX = max(0, min(kx - 7 + bigCol + c, width[i] - 1));
 							int ori = (int)((OriMap[idx][posY + posX] - kori) * 180 / M_PI);
 							if (ori < 0) ori += 360;
 
@@ -844,26 +844,20 @@ void CSIFT::KeyMatching()
 			{
 				itr->minDist2 = distSq;
 			}
-		}
-	}
-	for (itr = feature_cmp.begin(); itr != feature_cmp.end(); itr++)
-	{
-		for (itr2 = feature.begin(); itr2 != feature.end(); itr2++)
-		{
-			float distSq = _CalcSIFTSqDist(*itr, *itr2);
 
-			if (distSq < itr->minDist1) // 가장 가까운 특징점 갱신
+			if (distSq < itr2->minDist1)
 			{
-				itr->minDist2 = itr->minDist1;
-				itr->minDist1 = distSq;
-				itr->nearest = &(*itr2);
+				itr2->minDist2 = itr->minDist1;
+				itr2->minDist1 = distSq;
+				itr2->nearest = &(*itr);
 			}
-			else if (distSq < itr->minDist2) // 두번째로 가까운 특징점 갱신
+			else if (distSq < itr->minDist2)
 			{
-				itr->minDist2 = distSq;
+				itr2->minDist2 = distSq;
 			}
 		}
 	}
+
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
 		feature_t* nearkey = itr->nearest;

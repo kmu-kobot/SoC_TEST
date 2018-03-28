@@ -115,8 +115,6 @@ private:
 	std::vector<feature_t> feature_sub;		//	sub key point vector. if any key point has another orientation, push back in this vector.
 	std::vector<feature_t>::iterator itr;	//	key point vector's iterator.
 	std::vector<feature_t>::iterator itr2;	//	
-	std::vector<feature_t>::iterator itr3;	//	
-	std::vector<feature_t>::iterator itr4;	//	
 	std::vector<feature_t> feature_cmp;
 };
 

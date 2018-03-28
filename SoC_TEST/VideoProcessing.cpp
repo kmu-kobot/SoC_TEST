@@ -117,86 +117,86 @@ void YUY2ToRGB24(int nWidth, int nHeight, const BYTE* pYUY2, BYTE* pRGB24)
 	}
 }
 
-//#define evne(x) (x % 2 == 0 ? x + 1 : x)
+#define evne(x) (x % 2 == 0 ? x + 1 : x)
 
-//void GaussianBlur(CByteImage& src, CByteImage& dst, double radius)
-//{
-//	int nWidth = src.GetWidth();
-//	int nHeight = src.GetHeight();
-//	int nChnnl = src.GetChannel();
-//	int nWStep = src.GetWStep();
-//	BYTE* pSrc = src.GetPtr();
-//	BYTE* pDst = dst.GetPtr();
-//
-//	// 1차원 가우스 마스크 생성
-//	int nHalf = max((radius * 6 - 1) / 2, 1);
-//	nHalf = evne(nHalf);
-//
-//	int nMeanSize = nHalf * 2 + 1;
-//
-//	double* m_bufGss = new double[evne(nHalf * 2) * 2 + 1];
-//
-//	for (int n = 0; n <= nHalf; n++)
-//	{
-//		m_bufGss[nHalf - n] = m_bufGss[nHalf + n]
-//			= exp(-n * n / (2 * radius*radius));
-//	}
-//
-//	int r, c, l;
-//	CDoubleImage tmpConv(nWidth, nHeight, nChnnl);
-//	double* pTmp = tmpConv.GetPtr();
-//
-//	// 가로 방향 회선
-//	for (r = 0; r<nHeight; r++) // 행 이동
-//	{
-//		for (c = 0; c<nWidth; c++) // 열 이동
-//		{
-//			for (l = 0; l<nChnnl; l++) // 채널 이동
-//			{
-//				double dSum = 0; // (마스크*픽셀) 값의 합
-//				double dGss = 0; // 마스크 값의 합
-//				for (int n = -nHalf; n <= nHalf; n++)
-//				{
-//					int px = c + n;
-//
-//					if (px >= 0 && px<nWidth)
-//					{
-//						dSum += (pSrc[nWStep * r + px + l] * m_bufGss[nHalf + n]);
-//						dGss += m_bufGss[nHalf + n];
-//					}
-//				}
-//				pTmp[nWStep * r + c + l] = dSum / dGss;
-//			} // 채널 이동 끝
-//		} // 열 이동 끝
-//	} // 행 이동 끝
-//
-//	  // 세로 방향 회선
-//	for (r = 0; r<nHeight; r++) // 행 이동
-//	{
-//		for (c = 0; c<nWidth; c++) // 열 이동
-//		{
-//			for (l = 0; l<nChnnl; l++) // 채널 이동
-//			{
-//				double dSum = 0; // 픽셀 값의 합
-//				double dGss = 0; // 마스크 값의 합
-//				for (int n = -nHalf; n <= nHalf; n++)
-//				{
-//					int py = r + n;
-//
-//					if (py >= 0 && py<nHeight)
-//					{
-//						int absN = abs(n);
-//						dSum += pTmp[nWStep*py + nChnnl * c + l] * m_bufGss[nHalf + n];
-//						dGss += m_bufGss[nHalf + n];
-//					}
-//				}
-//				pDst[nWStep*r + nChnnl * c + l] = (BYTE)(dSum / dGss);
-//			} // 채널 이동 끝
-//		} // 열 이동 끝
-//	} // 행 이동 끝
-//}
-//
-//
+void GaussianBlur(CFloatImage& src, CFloatImage& dst, float radius)
+{
+	int nWidth = src.GetWidth();
+	int nHeight = src.GetHeight();
+	int nChnnl = src.GetChannel();
+	int nWStep = src.GetWStep();
+	float* pSrc = src.GetPtr();
+	float* pDst = dst.GetPtr();
+
+	// 1차원 가우스 마스크 생성
+	int nHalf = max((radius * 6 - 1) / 2, 1);
+	nHalf = evne(nHalf);
+
+	int nMeanSize = nHalf * 2 + 1;
+
+	float* m_bufGss = new float[evne(nHalf * 2) * 2 + 1];
+
+	for (int n = 0; n <= nHalf; n++)
+	{
+		m_bufGss[nHalf - n] = m_bufGss[nHalf + n]
+			= exp(-n * n / (2 * radius*radius));
+	}
+
+	int r, c, l;
+	CFloatImage tmpConv(nWidth, nHeight, nChnnl);
+	float* pTmp = tmpConv.GetPtr();
+
+	// 가로 방향 회선
+	for (r = 0; r<nHeight; r++) // 행 이동
+	{
+		for (c = 0; c<nWidth; c++) // 열 이동
+		{
+			for (l = 0; l<nChnnl; l++) // 채널 이동
+			{
+				float dSum = 0; // (마스크*픽셀) 값의 합
+				float dGss = 0; // 마스크 값의 합
+				for (int n = -nHalf; n <= nHalf; n++)
+				{
+					int px = c + n;
+
+					if (px >= 0 && px<nWidth)
+					{
+						dSum += (pSrc[nWStep * r + px + l] * m_bufGss[nHalf + n]);
+						dGss += m_bufGss[nHalf + n];
+					}
+				}
+				pTmp[nWStep * r + c + l] = dSum / dGss;
+			} // 채널 이동 끝
+		} // 열 이동 끝
+	} // 행 이동 끝
+
+	  // 세로 방향 회선
+	for (r = 0; r<nHeight; r++) // 행 이동
+	{
+		for (c = 0; c<nWidth; c++) // 열 이동
+		{
+			for (l = 0; l<nChnnl; l++) // 채널 이동
+			{
+				float dSum = 0; // 픽셀 값의 합
+				float dGss = 0; // 마스크 값의 합
+				for (int n = -nHalf; n <= nHalf; n++)
+				{
+					int py = r + n;
+
+					if (py >= 0 && py<nHeight)
+					{
+						int absN = abs(n);
+						dSum += pTmp[nWStep*py + nChnnl * c + l] * m_bufGss[nHalf + n];
+						dGss += m_bufGss[nHalf + n];
+					}
+				}
+				pDst[nWStep*r + nChnnl * c + l] = (BYTE)(dSum / dGss);
+			} // 채널 이동 끝
+		} // 열 이동 끝
+	} // 행 이동 끝
+}
+
+
 
 //void gaussBlur(CByteImage& src, CByteImage& dst, int width, int height, double radius)
 //{

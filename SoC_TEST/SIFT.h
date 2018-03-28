@@ -19,11 +19,16 @@ typedef struct Feature
 	float orientation;		//	feature's orientation.
 	float vec[128];			//	key's 128 dimension vector.
 
+	Feature* nearest;
+
+	float minDist1;
+	float minDist2;
+
 	Feature()
 	{}
 
 	Feature(int o, int l, float x, float y, float v)
-		:octave(o), level(l), x(x), y(y), value(v) 
+		:octave(o), level(l), x(x), y(y), value(v), minDist1(FLT_MAX), minDist2(FLT_MAX) 
 	{
 		if (!octave)
 		{
@@ -32,13 +37,13 @@ typedef struct Feature
 		}
 		else
 		{
-			nx = (int)x << (level - 1);
-			ny = (int)y << (level - 1);
+			nx = (int)x << (octave - 1);
+			ny = (int)y << (octave - 1);
 		}
 	}
 
 	Feature(int o, int l, int x, int y, float v)
-		:octave(o), level(l), x((float)x), y((float)y), value(v)
+		:octave(o), level(l), x((float)x), y((float)y), value(v), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{
 		if (!octave)
 		{
@@ -47,17 +52,17 @@ typedef struct Feature
 		}
 		else
 		{
-			nx = (int)x << (level - 1);
-			ny = (int)y << (level - 1);
+			nx = (int)x << (octave - 1);
+			ny = (int)y << (octave - 1);
 		}
 	}
 	
 	Feature(const Feature& key, float ori)
-		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(ori)
+		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(ori), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{}
 
 	Feature(const Feature& key)
-		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(key.orientation)
+		:octave(key.octave), level(key.level), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(key.orientation), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{}
 } feature_t;
 
@@ -110,6 +115,8 @@ private:
 	std::vector<feature_t> feature_sub;		//	sub key point vector. if any key point has another orientation, push back in this vector.
 	std::vector<feature_t>::iterator itr;	//	key point vector's iterator.
 	std::vector<feature_t>::iterator itr2;	//	
+	std::vector<feature_t>::iterator itr3;	//	
+	std::vector<feature_t>::iterator itr4;	//	
 	std::vector<feature_t> feature_cmp;
 };
 

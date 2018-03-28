@@ -991,6 +991,7 @@ void DescriptingKey()
 
 LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 {
+	//static bool first = true;
 	if (gBmpInfo.bmiHeader.biCompression == BI_RGB) // RGB ¿µ»ó
 	{
 		memcpy(gImageBuf.GetPtr(), lpVHdr->lpData,
@@ -1010,7 +1011,12 @@ LRESULT ProcessCamFrame(HWND hWnd, LPVIDEOHDR lpVHdr)
 	{
 		return FALSE;
 	}
-
+/*
+	if (first)
+	{
+		gImageBuf.SaveImage("result.bmp");
+		first = false;
+	}*/
 	//BuildScaleSpace();
 	//DiffrenceOfGaussian();
 	//FindKeyPoint();
@@ -1186,8 +1192,11 @@ void CSoCTESTDlg::OnBnClickedButtonCamStart()
 	gImageBuf = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
 	//gImageOut = CByteImage(gBmpInfo.bmiHeader.biWidth, gBmpInfo.bmiHeader.biHeight, 3);
 	CByteImage confidence = LoadImageFromDialog();
+	//CByteImage confidence2 = LoadImageFromDialog();
 	m_SIFT = new CSIFT();
 	m_SIFT->BuildCmp(confidence);
+	//m_SIFT->SIFT(confidence2);
+	//m_SIFT->KeyMatching();
 	m_SIFT->Init(320, 240);
 	//InitScaleSpace();
 	//InitDOG();

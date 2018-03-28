@@ -22,6 +22,10 @@
 #define DES_SIZE 16
 #define DES_RADIUS 7.5f
 #define VEC_ORI_NUM 8
+#define KEY_THRES 0.8f
+#define DIST_THRES 0.8f
+
+#define BOX
 
 CSIFT::CSIFT()
 {
@@ -143,11 +147,11 @@ void CSIFT::SIFT(CByteImage& imageIn)
 	BuildScaleSpace();
 	BuildDOG();
 	FindKeyPoint();
-	AccurateKey();
+	//AccurateKey();
 	BuildGradient();
 	AssignOrientation();
-	DescriptKey();
-	//ShowKeyPoint();
+ 	DescriptKey();
+	ShowKeyPoint();
 }
 
 #ifdef STATIC_SIZE
@@ -239,12 +243,19 @@ void CSIFT::BuildScaleSpace()
 		pTemp[pos] = (float)pOriginal[pos];
 	}
 
+#ifdef BOX
 	gaussBlur(ScaleTemp[0], ScaleSpace[0], sigma[0]);
-
+#else
+	GaussianBlur(ScaleTemp[0], ScaleSpace[0], sigma[0]);
+#endif
 	for (int i = 0; i < LEVEL_NUM_SS - 1; i++)
 	{
 		memcpy(ScaleTemp[0].GetPtr(), ScaleSpace[i].GetPtr(), size[0] * sizeof(float));
+#ifdef BOX
 		gaussBlur(ScaleTemp[0], ScaleSpace[i + 1], sigma[i]);
+#else
+		GaussianBlur(ScaleTemp[0], ScaleSpace[i + 1], sigma[i]);
+#endif
 	}
 
 	for (int i = 1; i < OCTAVE_NUM; i++)
@@ -262,7 +273,11 @@ void CSIFT::BuildScaleSpace()
 		for (int j = 1; j < LEVEL_NUM_SS; j++)
 		{
 			memcpy(ScaleTemp[i].GetPtr(), ScaleSpace[i * LEVEL_NUM_SS + j - 1].GetPtr(), size[i] * sizeof(float));
+#ifdef BOX
 			gaussBlur(ScaleTemp[i], ScaleSpace[i * LEVEL_NUM_SS + j], sigma[j - 1]);
+#else
+			GaussianBlur(ScaleTemp[i], ScaleSpace[i * LEVEL_NUM_SS + j], sigma[j - 1]);
+#endif
 		}
 	}
 }
@@ -310,43 +325,31 @@ void CSIFT::FindKeyPoint()
 
 				for (int c = 1; c < nWidth - 1; c++)
 				{
-					if (fabs(src1[c]) < 0.9f)
+					if (fabs(src1[c]) < KEY_THRES)
 						continue;
-					if (src1[c] == src0[c] || src1[c] == src2[c])
-						continue;
-					bool max = src1[c] > src0[c];
-					bool max3 = src1[c] > src2[c];
-					if (max ^ max3)
-						continue;
-
-					if (max)
-					{
+						
 						if (src1[c] > src1[c - 1] && src1[c] > src1[c + 1] &&
 							src1[c] > src1[c - 1 - nWStep] && src1[c] > src1[c - nWStep] && src1[c] > src1[c + 1 - nWStep] &&
 							src1[c] > src1[c - 1 + nWStep] && src1[c] > src1[c + nWStep] && src1[c] > src1[c + 1 + nWStep] &&
-							src1[c] > src0[c - 1] && src1[c] > src0[c + 1] &&
-							src1[c] > src2[c - 1] && src1[c] > src2[c + 1] &&
+							src1[c] > src0[c - 1] && src1[c] > src0[c] && src1[c] > src0[c + 1] &&
+							src1[c] > src2[c - 1] && src1[c] > src2[c] && src1[c] > src2[c + 1] &&
 							src1[c] > src0[c - 1 - nWStep] && src1[c] > src0[c - nWStep] && src1[c] > src0[c + 1 - nWStep] &&
 							src1[c] > src2[c - 1 - nWStep] && src1[c] > src2[c - nWStep] && src1[c] > src2[c + 1 - nWStep] &&
 							src1[c] > src0[c - 1 + nWStep] && src1[c] > src0[c + nWStep] && src1[c] > src0[c + 1 + nWStep] &&
 							src1[c] > src2[c - 1 + nWStep] && src1[c] > src2[c + nWStep] && src1[c] > src2[c + 1 + nWStep]
 							)
 							feature.push_back(feature_t(i, j + 1, c, r, src1[c]));
-					}
-					else
-					{
-						if (src1[c] < src1[c - 1] && src1[c] < src1[c + 1] &&
+						else if (src1[c] < src1[c - 1] && src1[c] < src1[c + 1] &&
 							src1[c] < src1[c - 1 - nWStep] && src1[c] < src1[c - nWStep] && src1[c] < src1[c + 1 - nWStep] &&
 							src1[c] < src1[c - 1 + nWStep] && src1[c] < src1[c + nWStep] && src1[c] < src1[c + 1 + nWStep] &&
-							src1[c] < src0[c - 1] && src1[c] < src0[c + 1] &&
-							src1[c] < src2[c - 1] && src1[c] < src2[c + 1] &&
+							src1[c] < src0[c - 1] && src1[c] < src0[c] && src1[c] < src0[c + 1] &&
+							src1[c] < src2[c - 1] && src1[c] < src2[c] && src1[c] < src2[c + 1] &&
 							src1[c] < src0[c - 1 - nWStep] && src1[c] < src0[c - nWStep] && src1[c] < src0[c + 1 - nWStep] &&
 							src1[c] < src2[c - 1 - nWStep] && src1[c] < src2[c - nWStep] && src1[c] < src2[c + 1 - nWStep] &&
 							src1[c] < src0[c - 1 + nWStep] && src1[c] < src0[c + nWStep] && src1[c] < src0[c + 1 + nWStep] &&
 							src1[c] < src2[c - 1 + nWStep] && src1[c] < src2[c + nWStep] && src1[c] < src2[c + 1 + nWStep]
 							)
 							feature.push_back(feature_t(i, j + 1, c, r, src1[c]));
-					}
 				}
 			}
 		}
@@ -498,7 +501,7 @@ void CSIFT::BuildGradient()
 				{
 					dx = pSrc[c + 1] - pSrc[c - 1];
 					dy = pSrc[c + wstep[i]] - pSrc[c - wstep[i]];
-					MagMap[GrdIdx][r * wstep[i] + c] = dx * dx + dy * dy; // no sqrt
+					MagMap[GrdIdx][r * wstep[i] + c] = sqrtf(dx * dx + dy * dy);
 					OriMap[GrdIdx][r * wstep[i] + c] = atan2(dy, dx);
 				}
 			}
@@ -510,7 +513,7 @@ void CSIFT::BuildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c + wstep[i]] - pSrc[c]);
-				MagMap[GrdIdx][c] = dx * dx + dy * dy; // no sqrt
+				MagMap[GrdIdx][c] = sqrtf(dx * dx + dy * dy);
 				OriMap[GrdIdx][c] = atan2(dy, dx);
 			}
 
@@ -520,7 +523,7 @@ void CSIFT::BuildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c] - pSrc[c - wstep[i]]);
-				MagMap[GrdIdx][(height[i]-1) * wstep[i] + c] = dx * dx + dy * dy; // no sqrt
+				MagMap[GrdIdx][(height[i]-1) * wstep[i] + c] = sqrtf(dx * dx + dy * dy); // no sqrt
 				OriMap[GrdIdx][(height[i] - 1) * wstep[i] + c] = atan2(dy, dx);
 			}
 
@@ -530,7 +533,7 @@ void CSIFT::BuildGradient()
 			{
 				dx = 2.0f * (pSrc[r * wstep[i] + 1] - pSrc[r * wstep[i]]);
 				dy = pSrc[(r + 1) * wstep[i]] - pSrc[(r - 1) * wstep[i]];
-				MagMap[GrdIdx][r * wstep[i]] = dx * dx + dy * dy; // no sqrt
+				MagMap[GrdIdx][r * wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
 				OriMap[GrdIdx][r * wstep[i]] = atan2(dy, dx);
 			}
 
@@ -540,7 +543,7 @@ void CSIFT::BuildGradient()
 			{
 				dx = 2.0f * (pSrc[r * wstep[i]] - pSrc[r * wstep[i] - 1]);
 				dy = pSrc[(r + 1) * wstep[i]] - pSrc[(r - 1) * wstep[i]];
-				MagMap[GrdIdx][r * wstep[i] + width[i]-1] = dx * dx + dy * dy; // no sqrt
+				MagMap[GrdIdx][r * wstep[i] + width[i]-1] = sqrtf(dx * dx + dy * dy); // no sqrt
 				OriMap[GrdIdx][r * wstep[i] + width[i]-1] = atan2(dy, dx);
 			}
 
@@ -552,22 +555,22 @@ void CSIFT::BuildGradient()
 
 			dx = 2.0f * (pSrc[1] - pSrc[0]);
 			dy = 2.0f * (pSrc[wstep[i]] - pSrc[0]);
-			MagMap[GrdIdx][0] = dx * dx + dy * dy; // no sqrt
+			MagMap[GrdIdx][0] = sqrtf(dx * dx + dy * dy); // no sqrt
 			OriMap[GrdIdx][0] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[cLast] - pSrc[cLast - 1]);
 			dy = 2.0f * (pSrc[wstep[i] + cLast] - pSrc[cLast]);
-			MagMap[GrdIdx][cLast] = dx * dx + dy * dy; // no sqrt
+			MagMap[GrdIdx][cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
 			OriMap[GrdIdx][cLast] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * wstep[i] + 1] - pSrc[rLast * wstep[i]]);
 			dy = 2.0f * (pSrc[rLast * wstep[i]] - pSrc[(rLast - 1) * wstep[i]]);
-			MagMap[GrdIdx][rLast * wstep[i]] = dx * dx + dy * dy; // no sqrt
+			MagMap[GrdIdx][rLast * wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
 			OriMap[GrdIdx][rLast * wstep[i]] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * wstep[i] + cLast] - pSrc[rLast * wstep[i] + cLast - 1]);
 			dy = 2.0f * (pSrc[rLast * wstep[i] + cLast] - pSrc[(rLast - 1) * wstep[i] + cLast]);
-			MagMap[GrdIdx][rLast * wstep[i] + cLast] = dx * dx + dy * dy; // no sqrt
+			MagMap[GrdIdx][rLast * wstep[i] + cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
 			OriMap[GrdIdx][rLast * wstep[i] + cLast] = atan2(dy, dx);
 		}
 	}
@@ -591,8 +594,11 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = kx - radius[window] + c;
 				int y = ky - radius[window] + r;
-				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 36.0f) / _2PI);
-				if (ori < 0) ori += 36;
+				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 180.0f) / M_PI);
+				if (ori < 0) ori += 360;
+				
+				ori = ori / 10;
+				
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
 		}
@@ -605,8 +611,11 @@ void CSIFT::JudgeOrientation(feature_t& key)
 			{
 				int x = max(0, min(kx - radius[window] + c, width[o] - 1));
 				int y = max(0, min(ky - radius[window] + r, height[o] - 1));
-				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 36.0f) / _2PI);
-				if (ori < 0) ori += 36;
+				int ori = (int)((OriMap[imageIdx][y * wstep[o] + x] * 180.0f) / M_PI);
+				if (ori < 0) ori += 360;
+
+				ori = ori / 10;
+
 				hist[ori] += MagMap[imageIdx][y * wstep[o] + x] * weightMagnitude[window][r * wsize[window] + c];
 			}
 		}
@@ -667,15 +676,18 @@ void CSIFT::DescriptKey()
 				{
 					int bigRow = i * 4;
 					int bigCol = j * 4;
-					memset(hist, 0.0f, 8 * sizeof(float));
+					memset(hist, 0, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
 						int posY = (ky - 7 + bigRow + r) * wstep[o];
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = idx + kx - 7 + bigCol + c;gosemvhs9
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI + 0.5f);
-							if (ori < 0) ori += 8;
+							int posX = idx + kx - 7 + bigCol + c;
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * 180 / M_PI);
+							if (ori < 0) ori += 360;
+
+							ori = ori / 45;
+
 							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}
@@ -687,7 +699,7 @@ void CSIFT::DescriptKey()
 					}
 					for (int k = 0; k < 8; k++)
 					{
-						itr->vec[pos++] = hist[k] / (5.0f * max);
+						itr->vec[pos++] = hist[k]/* / (5.0f * max)*/;
 					}
 				}
 			}
@@ -700,15 +712,18 @@ void CSIFT::DescriptKey()
 				{
 					int bigRow = i * 4;
 					int bigCol = j * 4;
-					memset(hist, 0.0f, 8 * sizeof(float));
+					memset(hist, 0, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
 						int posY = min(0, max(ky - 7 + bigRow + r, height[o] - 1));
 						for (int c = 0; c < 4; c++)
 						{
 							int posX = min(0, max(kx - 7 + bigCol + c, width[i] - 1));
-							int ori = (int)((OriMap[idx][posY + posX] - kori) * DES_SIGMA / _2PI + 0.5f);
-							if (ori < 0) ori += 8;
+							int ori = (int)((OriMap[idx][posY + posX] - kori) * 180 / M_PI);
+							if (ori < 0) ori += 360;
+
+							ori = ori / 45;
+
 							hist[ori] += MagMap[idx][posY + posX] * weightDescript[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}
@@ -720,7 +735,7 @@ void CSIFT::DescriptKey()
 					}
 					for (int k = 0; k < 8; k++)
 					{
-						itr->vec[pos++] = hist[k] / (5.0f * max);
+						itr->vec[pos++] = hist[k]/* / (5.0f * max)*/;
 					}
 				}
 			}
@@ -801,44 +816,61 @@ float _CalcSIFTSqDist(const feature_t& k1, const feature_t& k2)
 void CSIFT::KeyMatching()
 {
 	m_imageOut = CByteImage(width[1] + m_imageCmp.GetWidth(), max(height[1], m_imageCmp.GetHeight()), 3);
+	int heightCmp = m_imageCmp.GetHeight();
 	int wstep = m_imageIn.GetWStep();
-	for (int r = 0; r < 200; r++)
+	for (int r = 0; r < heightCmp; r++)
 	{
 		memcpy(m_imageOut.GetPtr(r), m_imageIn.GetPtr(height[1] - r - 1), wstep * sizeof(BYTE));
-		memcpy(m_imageOut.GetPtr(r, 320 * 3), m_imageCmp.GetPtr(r), m_imageCmp.GetWStep() * sizeof(BYTE));
+		memcpy(m_imageOut.GetPtr(r, width[1] * 3), m_imageCmp.GetPtr(r), m_imageCmp.GetWStep() * sizeof(BYTE));
 	}
-	for (int r = 200; r < 240; r++)
+	for (int r = heightCmp; r < height[1]; r++)
 	{
 		memcpy(m_imageOut.GetPtr(r), m_imageIn.GetPtr(height[1] - r - 1), wstep * sizeof(BYTE));
 	}
 
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
-		__int64 minDist1 = 18446744073709551615, minDist2 = 18446744073709551615;
-
 		for (itr2 = feature_cmp.begin(); itr2 != feature_cmp.end(); itr2++)
 		{
-			__int64 distSq = _CalcSIFTSqDist(*itr, *itr2);
+			float distSq = _CalcSIFTSqDist(*itr, *itr2);
 
-			if (distSq < minDist1) // 가장 가까운 특징점 갱신
+			if (distSq < itr->minDist1) // 가장 가까운 특징점 갱신
 			{
-				minDist2 = minDist1;
-				minDist1 = distSq;
+				itr->minDist2 = itr->minDist1;
+				itr->minDist1 = distSq;
+				itr->nearest = &(*itr2);
 			}
-			else if (distSq < minDist2) // 두번째로 가까운 특징점 갱신
+			else if (distSq < itr->minDist2) // 두번째로 가까운 특징점 갱신
 			{
-				minDist2 = distSq;
+				itr->minDist2 = distSq;
 			}
 		}
-
-		if (minDist1 < minDist2 * 0.64) // 유효한 대응 관계 판단
+	}
+	for (itr = feature_cmp.begin(); itr != feature_cmp.end(); itr++)
+	{
+		for (itr2 = feature.begin(); itr2 != feature.end(); itr2++)
 		{
-			int x1 = itr->nx;
-			int y1 = itr->ny;
-			int x2 = itr2->nx;
-			int y2 = itr2->ny;
-			DrawLine(m_imageOut, x1, x2,
-				x2 + width[1], y2, 255, 0, 0);
+			float distSq = _CalcSIFTSqDist(*itr, *itr2);
+
+			if (distSq < itr->minDist1) // 가장 가까운 특징점 갱신
+			{
+				itr->minDist2 = itr->minDist1;
+				itr->minDist1 = distSq;
+				itr->nearest = &(*itr2);
+			}
+			else if (distSq < itr->minDist2) // 두번째로 가까운 특징점 갱신
+			{
+				itr->minDist2 = distSq;
+			}
+		}
+	}
+	for (itr = feature.begin(); itr != feature.end(); itr++)
+	{
+		feature_t* near = itr->nearest;
+		if (&(*itr) == near->nearest && itr->minDist1 < itr->minDist2 * DIST_THRES && near->minDIst1 < near->minDist2 * DIST_THRES) // 유효한 대응 관계 판단
+		{
+			DrawLine(m_imageOut, itr->nx, itr->ny,
+				near->nx + width[1], near->ny, 255, 0, 0);
 		}
 	}
 	ShowImage(m_imageOut, "result");

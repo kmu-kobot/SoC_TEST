@@ -866,11 +866,11 @@ void CSIFT::KeyMatching()
 	}
 	for (itr = feature.begin(); itr != feature.end(); itr++)
 	{
-		feature_t* near = itr->nearest;
-		if (&(*itr) == near->nearest && itr->minDist1 < itr->minDist2 * DIST_THRES && near->minDIst1 < near->minDist2 * DIST_THRES) // 유효한 대응 관계 판단
+		feature_t* nearkey = itr->nearest;
+		if (&(*itr) == nearkey->nearest && itr->minDist1 < itr->minDist2 * DIST_THRES && nearkey->minDist1 < nearkey->minDist2 * DIST_THRES) // 유효한 대응 관계 판단
 		{
 			DrawLine(m_imageOut, itr->nx, itr->ny,
-				near->nx + width[1], near->ny, 255, 0, 0);
+				nearkey->nx + width[1], nearkey->ny, 255, 0, 0);
 		}
 	}
 	ShowImage(m_imageOut, "result");

@@ -28,6 +28,9 @@ CSift::CSift()
 		mag_Size[i] = (mag_Radius[i] << 1) + 1;
 		mag_Weight[i] = new float[mag_Size[i] * mag_Size[i]];
 	}
+
+	initMagWeight();
+	initDesWeight();
 }
 
 
@@ -51,12 +54,12 @@ CSift::~CSift()
 	}
 }
 
-void CSift::buildSample(CByteImage imageIn)
+void CSift::buildSample(CByteImage imageIn, int i)
 {
-	m_imageCmp = imageIn;
-	init(m_imageCmp);
-	detectFeature(m_imageCmp);
-	copyCmp();
+	m_imageCmp[i] = imageIn;
+	init(m_imageCmp[i]);
+	detectFeature(m_imageCmp[i]);
+	copyCmp(i);
 }
 
 void CSift::init(CByteImage imageIn)
@@ -122,6 +125,43 @@ void CSift::initGauss()
 }
 #endif
 
+void CSift::initMagWeight()
+{
+	float dx, dy, dxSquare, dySquare, _2SigmaSquare, factor;
+	for (int i = 0; i < NUM_GRADIENT_LEVEL; ++i)
+	{
+		_2SigmaSquare = 2 * mag_Sigma[i] * mag_Sigma[i];
+		for (int r = 0; r < mag_Size[i]; ++r)
+		{
+			dy = r - mag_Radius[i];
+			dySquare = dy * dy;
+			for (int c = 0; c < mag_Size[i]; ++c)
+			{
+				dx = c - mag_Radius[i];
+				dxSquare = dx * dx;
+				mag_Weight[i][r * mag_Size[i] + c] = expf(-(dxSquare + dySquare) / _2SigmaSquare);
+			}
+		}
+	}
+}
+
+void CSift::initDesWeight()
+{
+	float dx, dy, dxSquare, dySquare, _2SigmaSquare, factor;
+		_2SigmaSquare = 2 * DES_SIGMA * DES_SIGMA;
+		for (int r = 0; r < DES_SIZE; ++r)
+		{
+			dy = r - DES_RADIUS;
+			dySquare = dy * dy;
+			for (int c = 0; c < DES_SIZE; ++c)
+			{
+				dx = c - DES_RADIUS;
+				dxSquare = dx * dx;
+				des_Weight[r * DES_SIZE + c] = expf(-(dxSquare + dySquare) / _2SigmaSquare);
+			}
+		}
+}
+
 void CSift::detectFeature(CByteImage imageIn)
 {
 	m_imageIn = imageIn;
@@ -135,7 +175,7 @@ void CSift::detectFeature(CByteImage imageIn)
 	showFeature();
 	buildGradient();
 	assignOrientation();
-	//descriptKey();
+	descriptKey();
 }
 
 void CSift::buildScaleSpace()
@@ -220,7 +260,7 @@ void CSift::buildFeature()
 						valP > bot[c - 1 + m_wstep[i]] && valP > bot[c + m_wstep[i]] && valP > bot[c + 1 + m_wstep[i]] &&
 						valP > top[c - 1 + m_wstep[i]] && valP > top[c + m_wstep[i]] && valP > top[c + 1 + m_wstep[i]]
 						)
-						feature.push_back(feature_t(i, j, c, r, mid[c]));
+						feature.push_back(feature_t(i, j + 1, c, r, mid[c]));
 					else if (valN < mid[c - 1] && valN < mid[c + 1] &&
 						valN < mid[c - 1 - m_wstep[i]] && valN < mid[c - m_wstep[i]] && valN < mid[c + 1 - m_wstep[i]] &&
 						valN < mid[c - 1 + m_wstep[i]] && valN < mid[c + m_wstep[i]] && valN < mid[c + 1 + m_wstep[i]] &&
@@ -231,7 +271,7 @@ void CSift::buildFeature()
 						valN < bot[c - 1 + m_wstep[i]] && valN < bot[c + m_wstep[i]] && valN < bot[c + 1 + m_wstep[i]] &&
 						valN < top[c - 1 + m_wstep[i]] && valN < top[c + m_wstep[i]] && valN < top[c + 1 + m_wstep[i]]
 						)
-						feature.push_back(feature_t(i, j, c, r, mid[c]));
+						feature.push_back(feature_t(i, j + 1, c, r, mid[c]));
 				}
 			}
 		}
@@ -241,7 +281,7 @@ void CSift::buildFeature()
 void CSift::showFeature()
 {
 	static int width, height;
-	m_imageOut = m_imageIn;
+	m_imageOutH = m_imageIn;
 	width = m_imageIn.GetWidth();
 	height = m_imageIn.GetHeight();
 	for (itr = feature.begin(); itr != feature.end(); ++itr)
@@ -250,13 +290,13 @@ void CSift::showFeature()
 		{
 			for (int c = -FEATURE_RADIUS; c < FEATURE_RADIUS + 1; ++c)
 			{
-				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 0) = 255;
-				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 1) = 255;
-				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 2) = 255;
+				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 0) = 255;
+				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 1) = 255;
+				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 2) = 255;
 			}
 		}
 	}
-	ShowImage(m_imageOut);
+	ShowImage(m_imageOutH);
 }
 
 bool solve(const float* H, const float* D, float* B)
@@ -573,6 +613,95 @@ void CSift::assignOrientation()
 
 void CSift::descriptKey()
 {
+	float hist[8];
+
+	for (itr = feature.begin(); itr != feature.end(); itr++)
+	{
+		int o = itr->octave; // key octave
+		int l = itr->level; // key level
+		int kx = (int)itr->x; // key x
+		int ky = (int)itr->y; // key y
+		float kori = itr->orientation; // key orientation
+		int idx = (o >> 1) + l - 1; // index of gradient array
+		int pos = 0; // index of 128 dimension vector
+
+		if (kx > 6 && kx < m_width[o] - 8 && ky > 6 && ky < m_height[o] - 8)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = i * 4;
+					int bigCol = j * 4;
+					memset(hist, 0, 8 * sizeof(float));
+					for (int r = 0; r < 4; r++)
+					{
+						int posY = (ky - 7 + bigRow + r) * m_wstep[o];
+						for (int c = 0; c < 4; c++)
+						{
+							int posX = kx - 7 + bigCol + c;
+							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
+							while (ori < 0) ori += 8;
+
+							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+#ifdef VECTOR_NORM
+						itr->vec[pos++] = hist[k] / (5.0f * max);
+#else
+						itr->vec[pos++] = hist[k];
+#endif
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = i * 4;
+					int bigCol = j * 4;
+					memset(hist, 0, 8 * sizeof(float));
+					for (int r = 0; r < 4; r++)
+					{
+						int posY = max(0, min(ky - 7 + bigRow + r, m_height[o] - 1)) * m_wstep[o];
+						for (int c = 0; c < 4; c++)
+						{
+							int posX = max(0, min(kx - 7 + bigCol + c, m_width[i] - 1));
+							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
+							while (ori < 0) ori += 8;
+
+							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+#ifdef VECTOR_NORM
+						itr->vec[pos++] = hist[k] / (5.0f * max);
+#else
+						itr->vec[pos++] = hist[k];
+#endif
+					}
+				}
+			}
+		}
+	}
 }
 
 void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
@@ -646,78 +775,105 @@ float _CalcSIFTSqDist(const feature_t& k1, const feature_t& k2)
 
 void CSift::keyMatching()
 {
-	for (itr = feature.begin(); itr != feature.end(); itr++)
+	int cnt[NUM_SAMPLE];
+	int best = 0;
+
+	memset(cnt, 0, NUM_SAMPLE * sizeof(int));
+
+	for(int i = 0; i < NUM_SAMPLE; ++i)
 	{
-		for (itr2 = feature_sample.begin(); itr2 != feature_sample.end(); itr2++)
+		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); itr++)
 		{
-			float distSq = _CalcSIFTSqDist(*itr, *itr2);
+			itr->minDist1 = itr->minDist2 = FLT_MAX;
 
-			if (distSq < itr->minDist1)
+			for (itr2 = feature.begin(); itr2 != feature.end(); itr2++)
 			{
-				itr->minDist2 = itr->minDist1;
-				itr->minDist1 = distSq;
-				itr->nearest = &(*itr2);
-			}
-			else if (distSq < itr->minDist2)
-			{
-				itr->minDist2 = distSq;
-			}
+				float distSq = _CalcSIFTSqDist(*itr, *itr2);
 
-			if (distSq < itr2->minDist1)
-			{
-				itr2->minDist2 = itr->minDist1;
-				itr2->minDist1 = distSq;
-				itr2->nearest = &(*itr);
+				if (distSq < itr->minDist1)
+				{
+					itr->minDist2 = itr->minDist1;
+					itr->minDist1 = distSq;
+					itr->nearest = &(*itr2);
+				}
+				else if (distSq < itr->minDist2)
+				{
+					itr->minDist2 = distSq;
+				}
 			}
-			else if (distSq < itr->minDist2)
+		}
+
+		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); ++itr)
+		{
+			if (itr->minDist1 < itr->minDist2 * 0.6f * 0.6f)
 			{
-				itr2->minDist2 = distSq;
+				++cnt[i];
 			}
+		}
+
+		if (cnt[best] < cnt[i])
+		{
+			best = i;
 		}
 	}
 
 	CByteImage& imageIn = m_imageIn.GetChannel() == 3 ? m_imageIn : Gray2RGB(m_imageIn);
-	CByteImage& imageCmp = m_imageCmp.GetChannel() == 3 ? m_imageCmp : Gray2RGB(m_imageCmp);
+	CByteImage& imageCmp = m_imageCmp[best].GetChannel() == 3 ? m_imageCmp[best] : Gray2RGB(m_imageCmp[best]);
 
-	m_imageOut = CByteImage(m_width[1] + imageCmp.GetWidth(), max(m_height[1], imageCmp.GetHeight()), 3);
 	int wstep = imageIn.GetWStep();
 	int width_Cmp = imageCmp.GetWidth();
 	int height_Cmp = imageCmp.GetHeight();
 	int wstep_Cmp = imageCmp.GetWStep();
 	int min_Height = min(m_height[1], height_Cmp);
+	int min_Width = min(m_width[1], width_Cmp);
+	m_imageOutH = CByteImage(m_width[1] + width_Cmp, max(m_height[1], height_Cmp), 3);
+	m_imageOutV = CByteImage(max(m_width[1], width_Cmp), m_height[1] + height_Cmp, 3);
+
+	//H
 	for (int r = 0; r < min_Height; r++)
 	{
-		memcpy(m_imageOut.GetPtr(r), imageIn.GetPtr(r), wstep * sizeof(BYTE));
-		memcpy(m_imageOut.GetPtr(r, wstep), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
-	}
-	for (int r = min_Height; r < m_height[1]; r++)
-	{
-		memcpy(m_imageOut.GetPtr(r), imageIn.GetPtr(r), wstep * sizeof(BYTE));
+		memcpy(m_imageOutH.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
+		memcpy(m_imageOutH.GetPtr(r, width_Cmp), imageIn.GetPtr(r), wstep * sizeof(BYTE));
 	}
 	for (int r = min_Height; r < height_Cmp; ++r)
 	{
-		memcpy(m_imageOut.GetPtr(r, wstep), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
+		memcpy(m_imageOutH.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
+	}
+	for (int r = min_Height; r < m_height[1]; r++)
+	{
+		memcpy(m_imageOutH.GetPtr(r, width_Cmp), imageIn.GetPtr(r), wstep * sizeof(BYTE));
 	}
 
-	for (itr = feature.begin(); itr != feature.end(); itr++)
+	//V
+	for (int r = 0; r < m_height[1]; ++r)
+	{
+		memcpy(m_imageOutV.GetPtr(r + height_Cmp), imageIn.GetPtr(r), wstep * sizeof(BYTE));
+	}
+	for (int r = 0; r < height_Cmp; ++r)
+	{
+		memcpy(m_imageOutV.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
+	}
+
+	for (itr = feature_sample[best].begin(); itr != feature_sample[best].end(); itr++)
 	{
 		feature_t* nearkey = itr->nearest;
-		//if (itr->minDist1 * 10 < itr->minDist2 * 6)
-		if (&(*itr) == nearkey->nearest && itr->minDist1 < itr->minDist2 * DIST_THRES && nearkey->minDist1 < nearkey->minDist2 * DIST_THRES)
+		if (itr->minDist1 < itr->minDist2 * 0.6f * 0.6f)
 		{
-			DrawLine(m_imageOut, itr->nx, itr->ny,
-				nearkey->nx + m_width[1], nearkey->ny, 255, 0, 0);
+			DrawLine(m_imageOutH, itr->nx, itr->ny,
+				nearkey->nx + width_Cmp, nearkey->ny, 255, 0, 0);
+			DrawLine(m_imageOutV, itr->nx, itr->ny,
+				nearkey->nx, nearkey->ny + height_Cmp, 255, 0, 0);
 		}
 	}
-	ShowImage(m_imageOut, "result");
-
+	ShowImage(m_imageOutH, "H");
+	ShowImage(m_imageOutV, "V");
 }
 
-void CSift::copyCmp()
+void CSift::copyCmp(int i)
 {
-	feature_sample.clear();
-	feature_sample.resize(feature.size());
-	std::copy(feature.begin(), feature.end(), feature_sample.begin());
+	feature_sample[i].clear();
+	feature_sample[i].resize(feature.size());
+	std::copy(feature.begin(), feature.end(), feature_sample[i].begin());
 }
 //not checked
 
@@ -733,7 +889,7 @@ void CSift::image2xB2F(CByteImage& src, CFloatImage& dst)
 		pDst = dst.GetPtr(r);
 		for (int c = 0; c < width; ++c)
 		{
-			pDst[c] = src.CubicConvIntp(c / 2.0f, r / 2.0f);
+			pDst[c] = src.CubicConvIntpD(c / 2.0f, r / 2.0f);
 		}
 	}
 }

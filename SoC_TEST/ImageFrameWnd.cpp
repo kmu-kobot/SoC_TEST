@@ -23,7 +23,7 @@ CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name)
 		wndName.Format("Image view %d", nFrameWndCount);
 
 	CRect rect(30*nFrameWndCount, 30*nFrameWndCount, 
-		image.GetWidth()+20+30*nFrameWndCount, image.GetHeight()+40+30*nFrameWndCount);
+		image.GetWidth()+20+30*nFrameWndCount, image.GetHeight()+60+30*nFrameWndCount);
 	Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
 
 	nFrameWndCount++;

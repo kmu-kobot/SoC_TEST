@@ -504,11 +504,54 @@ public:
 		return CLIP(c1 + c2*dy + c3*dy2 + c4*dy3);
 	}
 
+	double CubicConvIntpD(double x, double y)
+	{
+		int px[4], py[4];
+		px[0] = IN_IMG((int)x - 1, 0, m_nWidth - 1);
+		px[1] = IN_IMG((int)x, 0, m_nWidth - 1);
+		px[2] = IN_IMG((int)x + 1, 0, m_nWidth - 1);
+		px[3] = IN_IMG((int)x + 2, 0, m_nWidth - 1);
+		py[0] = IN_IMG((int)y - 1, 0, m_nHeight - 1);
+		py[1] = IN_IMG((int)y, 0, m_nHeight - 1);
+		py[2] = IN_IMG((int)y + 1, 0, m_nHeight - 1);
+		py[3] = IN_IMG((int)y + 2, 0, m_nHeight - 1);
+
+		double dx = x - px[1];
+		double dy = y - py[1];
+		double dx2 = dx * dx;
+		double dx3 = dx2 * dx;
+		double dy2 = dy * dy;
+		double dy3 = dy2 * dy;
+
+		double   p0, p1, p2, p3;  // 네 정수 좌표의 픽셀 값
+		double c1, c2, c3, c4;  // 네 정수 좌표의 가중치
+		double C[4];			// 가로 방향 보간 결과 
+
+		for (int i = 0; i<4; i++)
+		{
+			p0 = m_pImageData[py[i] * m_nWStep + px[0]];
+			p1 = m_pImageData[py[i] * m_nWStep + px[1]];
+			p2 = m_pImageData[py[i] * m_nWStep + px[2]];
+			p3 = m_pImageData[py[i] * m_nWStep + px[3]];
+			c1 = p1;
+			c2 = -p0 + p2;
+			c3 = 2.0 * (p0 - p1) + p2 - p3;
+			c4 = -p0 + p1 - p2 + p3;
+			C[i] = c1 + c2 * dx + c3 * dx2 + c4 * dx3;
+		}
+
+		c1 = C[1];
+		c2 = -C[0] + C[2];
+		c3 = 2.0 * (C[0] - C[1]) + C[2] - C[3];
+		c4 = -C[0] + C[1] - C[2] + C[3];
+		return (c1 + c2 * dy + c3 * dy2 + c4 * dy3) / 255.0;
+	}
+
 	int GetChannel()	const { return m_nChannels;  }
 	int GetHeight()		const { return m_nHeight;    }
 	int GetWidth()		const { return m_nWidth;	 }
 	int GetWStep()		const { return m_nWStep;	 }
-	T*  GetPtr(int r=0, int c=0)	const { return m_pImageData + r*m_nWStep + c; }
+	T*  GetPtr(int r=0, int c=0)	const { return m_pImageData + r*m_nWStep + c*m_nChannels; }
 
 protected:
 	int		m_nChannels;	// 채널 수

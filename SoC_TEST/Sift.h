@@ -8,6 +8,7 @@
 
 #define BOXBLUR
 #define VECTOR_NORM
+#define NUM_SAMPLE 2
 #define NUM_OCTAVE 4
 #define NUM_SCALE_SPACE_LEVEL 5
 #define NUM_SCALE_SPACE (NUM_SCALE_SPACE_LEVEL * NUM_OCTAVE)
@@ -102,13 +103,15 @@ public:
 	void init(CByteImage imageIn);
 	void detectFeature(CByteImage imageIn);
 
-	void buildSample(CByteImage imageCmp);
+	void buildSample(CByteImage imageCmp, int i);
 	void keyMatching();
 
 protected:
 #ifndef BOXBLUR
 	void initGauss();
 #endif
+	void initMagWeight();
+	void initDesWeight();
 	void buildScaleSpace();
 	void showScaleSpace();
 	void buildDOG();
@@ -125,13 +128,14 @@ protected:
 	void image2xDownSampleF2F(CFloatImage& src, CFloatImage& dst);
 	void gaussBlur(CFloatImage& src, CFloatImage& dst, int level);
 
-	void copyCmp();
+	void copyCmp(int i);
 
 protected:
 	CByteImage m_imageIn;
 	CByteImage m_imageInGray;
-	CByteImage m_imageCmp;
-	CByteImage m_imageOut;
+	CByteImage m_imageCmp[NUM_SAMPLE];
+	CByteImage m_imageOutH;
+	CByteImage m_imageOutV;
 	CFloatImage ScaleTemp[NUM_OCTAVE];
 	CFloatImage ScaleSpace[NUM_SCALE_SPACE];
 	CFloatImage DOG[NUM_DOG];
@@ -162,7 +166,7 @@ protected:
 
 	std::vector<feature_t> feature;
 	std::vector<feature_t> feature_sub;
-	std::vector<feature_t> feature_sample;
+	std::vector<feature_t> feature_sample[NUM_SAMPLE];
 	std::vector<feature_t>::iterator itr;
 	std::vector<feature_t>::iterator itr2;
 };

@@ -28,9 +28,6 @@ CSift::CSift()
 		mag_Size[i] = (mag_Radius[i] << 1) + 1;
 		mag_Weight[i] = new float[mag_Size[i] * mag_Size[i]];
 	}
-
-	initMagWeight();
-	initDesWeight();
 }
 
 
@@ -125,43 +122,6 @@ void CSift::initGauss()
 }
 #endif
 
-void CSift::initMagWeight()
-{
-	float dx, dy, dxSquare, dySquare, _2SigmaSquare, factor;
-	for (int i = 0; i < NUM_GRADIENT_LEVEL; ++i)
-	{
-		_2SigmaSquare = 2 * mag_Sigma[i] * mag_Sigma[i];
-		for (int r = 0; r < mag_Size[i]; ++r)
-		{
-			dy = r - mag_Radius[i];
-			dySquare = dy * dy;
-			for (int c = 0; c < mag_Size[i]; ++c)
-			{
-				dx = c - mag_Radius[i];
-				dxSquare = dx * dx;
-				mag_Weight[i][r * mag_Size[i] + c] = expf(-(dxSquare + dySquare) / _2SigmaSquare);
-			}
-		}
-	}
-}
-
-void CSift::initDesWeight()
-{
-	float dx, dy, dxSquare, dySquare, _2SigmaSquare, factor;
-		_2SigmaSquare = 2 * DES_SIGMA * DES_SIGMA;
-		for (int r = 0; r < DES_SIZE; ++r)
-		{
-			dy = r - DES_RADIUS;
-			dySquare = dy * dy;
-			for (int c = 0; c < DES_SIZE; ++c)
-			{
-				dx = c - DES_RADIUS;
-				dxSquare = dx * dx;
-				des_Weight[r * DES_SIZE + c] = expf(-(dxSquare + dySquare) / _2SigmaSquare);
-			}
-		}
-}
-
 void CSift::detectFeature(CByteImage imageIn)
 {
 	m_imageIn = imageIn;
@@ -175,7 +135,7 @@ void CSift::detectFeature(CByteImage imageIn)
 	showFeature();
 	buildGradient();
 	assignOrientation();
-	descriptKey();
+	//descriptKey();
 }
 
 void CSift::buildScaleSpace()
@@ -260,7 +220,7 @@ void CSift::buildFeature()
 						valP > bot[c - 1 + m_wstep[i]] && valP > bot[c + m_wstep[i]] && valP > bot[c + 1 + m_wstep[i]] &&
 						valP > top[c - 1 + m_wstep[i]] && valP > top[c + m_wstep[i]] && valP > top[c + 1 + m_wstep[i]]
 						)
-						feature.push_back(feature_t(i, j + 1, c, r, mid[c]));
+						feature.push_back(feature_t(i, j, c, r, mid[c]));
 					else if (valN < mid[c - 1] && valN < mid[c + 1] &&
 						valN < mid[c - 1 - m_wstep[i]] && valN < mid[c - m_wstep[i]] && valN < mid[c + 1 - m_wstep[i]] &&
 						valN < mid[c - 1 + m_wstep[i]] && valN < mid[c + m_wstep[i]] && valN < mid[c + 1 + m_wstep[i]] &&
@@ -271,7 +231,7 @@ void CSift::buildFeature()
 						valN < bot[c - 1 + m_wstep[i]] && valN < bot[c + m_wstep[i]] && valN < bot[c + 1 + m_wstep[i]] &&
 						valN < top[c - 1 + m_wstep[i]] && valN < top[c + m_wstep[i]] && valN < top[c + 1 + m_wstep[i]]
 						)
-						feature.push_back(feature_t(i, j + 1, c, r, mid[c]));
+						feature.push_back(feature_t(i, j, c, r, mid[c]));
 				}
 			}
 		}
@@ -449,9 +409,9 @@ void CSift::accurateKey()
 //not checked
 void CSift::buildGradient()
 {
-	int idx_ScaleSpace, idx_Gradient;
+	int idx_ScaleSpace, idx_Gradient, posY;
 	float dx, dy;
-	float* pSrc;
+	float *pSrc, *pOri, *pMag;
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 2; j++)
@@ -459,16 +419,19 @@ void CSift::buildGradient()
 			idx_ScaleSpace = i * NUM_SCALE_SPACE_LEVEL + j + 1;
 			idx_Gradient = i * NUM_GRADIENT_LEVEL + j;
 			pSrc = ScaleSpace[idx_ScaleSpace].GetPtr();
+			pOri = oriMap[idx_Gradient];
+			pMag = magMap[idx_Gradient];
 
 			for (int r = 1; r < m_height[i] - 1; r++)
 			{
 				pSrc = ScaleSpace[idx_ScaleSpace].GetPtr(r);
+				posY = r * m_wstep[i];
 				for (int c = 1; c < m_width[i] - 1; c++)
 				{
 					dx = pSrc[c + 1] - pSrc[c - 1];
 					dy = pSrc[c + m_wstep[i]] - pSrc[c - m_wstep[i]];
-					magMap[idx_Gradient][r * m_wstep[i] + c] = sqrtf(dx * dx + dy * dy);
-					oriMap[idx_Gradient][r * m_wstep[i] + c] = atan2(dy, dx);
+					pMag[posY + c] = sqrtf(dx * dx + dy * dy);
+					pOri[posY + c] = atan2(dy, dx);
 				}
 			}
 
@@ -479,8 +442,8 @@ void CSift::buildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c + m_wstep[i]] - pSrc[c]);
-				magMap[idx_Gradient][c] = sqrtf(dx * dx + dy * dy);
-				oriMap[idx_Gradient][c] = atan2(dy, dx);
+				pMag[c] = sqrtf(dx * dx + dy * dy);
+				pOri[c] = atan2(dy, dx);
 			}
 
 			//bottom out line
@@ -489,8 +452,8 @@ void CSift::buildGradient()
 			{
 				dx = pSrc[c + 1] - pSrc[c - 1];
 				dy = 2.0f * (pSrc[c] - pSrc[c - m_wstep[i]]);
-				magMap[idx_Gradient][(m_height[i] - 1) * m_wstep[i] + c] = sqrtf(dx * dx + dy * dy); // no sqrt
-				oriMap[idx_Gradient][(m_height[i] - 1) * m_wstep[i] + c] = atan2(dy, dx);
+				pMag[(m_height[i] - 1) * m_wstep[i] + c] = sqrtf(dx * dx + dy * dy); // no sqrt
+				pOri[(m_height[i] - 1) * m_wstep[i] + c] = atan2(dy, dx);
 			}
 
 			//left out line
@@ -499,8 +462,8 @@ void CSift::buildGradient()
 			{
 				dx = 2.0f * (pSrc[r * m_wstep[i] + 1] - pSrc[r * m_wstep[i]]);
 				dy = pSrc[(r + 1) * m_wstep[i]] - pSrc[(r - 1) * m_wstep[i]];
-				magMap[idx_Gradient][r * m_wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
-				oriMap[idx_Gradient][r * m_wstep[i]] = atan2(dy, dx);
+				pMag[r * m_wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
+				pOri[r * m_wstep[i]] = atan2(dy, dx);
 			}
 
 			//right out line
@@ -509,8 +472,8 @@ void CSift::buildGradient()
 			{
 				dx = 2.0f * (pSrc[r * m_wstep[i]] - pSrc[r * m_wstep[i] - 1]);
 				dy = pSrc[(r + 1) * m_wstep[i]] - pSrc[(r - 1) * m_wstep[i]];
-				magMap[idx_Gradient][r * m_wstep[i] + m_width[i] - 1] = sqrtf(dx * dx + dy * dy); // no sqrt
-				oriMap[idx_Gradient][r * m_wstep[i] + m_width[i] - 1] = atan2(dy, dx);
+				pMag[r * m_wstep[i] + m_width[i] - 1] = sqrtf(dx * dx + dy * dy); // no sqrt
+				pOri[r * m_wstep[i] + m_width[i] - 1] = atan2(dy, dx);
 			}
 
 
@@ -521,112 +484,79 @@ void CSift::buildGradient()
 
 			dx = 2.0f * (pSrc[1] - pSrc[0]);
 			dy = 2.0f * (pSrc[m_wstep[i]] - pSrc[0]);
-			magMap[idx_Gradient][0] = sqrtf(dx * dx + dy * dy); // no sqrt
-			oriMap[idx_Gradient][0] = atan2(dy, dx);
+			pMag[0] = sqrtf(dx * dx + dy * dy); // no sqrt
+			pOri[0] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[cLast] - pSrc[cLast - 1]);
 			dy = 2.0f * (pSrc[m_wstep[i] + cLast] - pSrc[cLast]);
-			magMap[idx_Gradient][cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
-			oriMap[idx_Gradient][cLast] = atan2(dy, dx);
+			pMag[cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
+			pOri[cLast] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * m_wstep[i] + 1] - pSrc[rLast * m_wstep[i]]);
 			dy = 2.0f * (pSrc[rLast * m_wstep[i]] - pSrc[(rLast - 1) * m_wstep[i]]);
-			magMap[idx_Gradient][rLast * m_wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
-			oriMap[idx_Gradient][rLast * m_wstep[i]] = atan2(dy, dx);
+			pMag[rLast * m_wstep[i]] = sqrtf(dx * dx + dy * dy); // no sqrt
+			pOri[rLast * m_wstep[i]] = atan2(dy, dx);
 
 			dx = 2.0f * (pSrc[rLast * m_wstep[i] + cLast] - pSrc[rLast * m_wstep[i] + cLast - 1]);
 			dy = 2.0f * (pSrc[rLast * m_wstep[i] + cLast] - pSrc[(rLast - 1) * m_wstep[i] + cLast]);
-			magMap[idx_Gradient][rLast * m_wstep[i] + cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
-			oriMap[idx_Gradient][rLast * m_wstep[i] + cLast] = atan2(dy, dx);
+			pMag[rLast * m_wstep[i] + cLast] = sqrtf(dx * dx + dy * dy); // no sqrt
+			pOri[rLast * m_wstep[i] + cLast] = atan2(dy, dx);
 		}
 	}
 }
 
 void CSift::judgeOrientation(feature_t& key)
 {
-	int window, idx_image, kx, ky, o, x, y, ori, radius, size;
-	float hist[36], dx, dy, sigma, value;
-	memset(hist, 0, 36 * sizeof(float));
+	int size, radius, o, kx, ky, x, y, posY, ori, idx_Map, width, height, wstep;
+	float hist[36], factor, dx, dy, *pMag, *pOri;
 
-	window = key.level - 1;
-	idx_image = key.octave * NUM_GRADIENT_LEVEL + window;
+	o = key.octave;
 	kx = (int)(key.x + 0.5f);
 	ky = (int)(key.y + 0.5f);
-	o = (int)(key.octave);
+	radius = (int)(3.0f * key.nscale);
+	size = (radius << 1) | 1;
+	factor = 2.0f * key.nscale * key.nscale;
+	idx_Map = key.octave * NUM_GRADIENT_LEVEL + key.level - 1;
+	pOri = oriMap[idx_Map];
+	pMag = magMap[idx_Map];
+	width = m_width[o];
+	height = m_height[o];
+	wstep = m_wstep[o];
 
-	sigma = key.nscale * 1.5f;
-	radius = (int)(sigma * 3.0f + 0.5f);
-	size = (radius << 1) + 1;
+	memset(hist, 0, 36 * sizeof(float));
 
-	if (kx > mag_Radius[window] && kx < m_width[o] - mag_Radius[window] && 
-		ky > mag_Radius[window] && ky < m_height[o] - mag_Radius[window])
+	for (int r = -radius; r <= radius; ++r)
 	{
-		for(int r = 0; r < size; ++r)
-		//for (int r = 0; r < mag_Size[window]; ++r)
+		y = IN_IMG(ky + r, 0, height - 1);
+		dy = y - key.y;
+		posY = y * wstep;
+		for (int c = -radius; c <= radius; ++c)
 		{
-			y = ky - radius + r;
-			//y = ky - mag_Radius[window] + r;
-			dy = key.y - (float)y;
-			for(int c = 0; c < size; ++c)
-			//for (int c = 0; c < mag_Size[window]; ++c)
-			{
-				x = key.x - radius + c;
-				//x = kx - mag_Radius[window] + c;
-				dx = key.x - (float)x;
-				ori = (int)((oriMap[idx_image][y * m_wstep[o] + x] * 36.0f) / _2PI);
-				if (ori < 0) ori += 36;
-
-				value = magMap[idx_image][y * m_wstep[o] + x] * expf(-(dx * dx + dy * dy) / 2.0f * sigma * sigma);
-				//value = magMap[idx_image][y * m_wstep[o] + x] * mag_Weight[window][r * mag_Size[window] + c];
-				hist[ori] += value;
-				//hist[ori++ % 36] += value;
-				//hist[ori++ % 36] += value;
-			}
-		}
-	}
-	else
-	{
-		for (int r = 0; r < mag_Size[window]; ++r)
-		{
-			y = IN_IMG(ky - radius + r, 0, m_height[o] - 1);
-			//y = IN_IMG(ky - mag_Radius[window] + r, 0, m_height[o] - 1);
-			dy = key.y - (float)y;
-			for (int c = 0; c < mag_Size[window]; ++c)
-			{
-				x = IN_IMG(kx - radius + c, 0, m_width[o] - 1);
-				//x = IN_IMG(kx - mag_Radius[window] + c, 0, m_width[o] - 1);
-				dx = key.x - (float)x;
-				ori = (int)((oriMap[idx_image][y * m_wstep[o] + x] * 36.0f) / _2PI);
-				if (ori < 0) ori += 36;
-
-				value = magMap[idx_image][y * m_wstep[o] + x] * expf(-(dx * dx + dy * dy) / 2.0f * sigma * sigma);
-				//value = magMap[idx_image][y * m_wstep[o] + x] * mag_Weight[window][r * mag_Size[window] + c];
-				hist[ori] += value;
-				//hist[ori++ % 36] += value;
-				//hist[ori++ % 36] += value;
-			}
+			x = IN_IMG(kx + c, 0, width - 1);
+			dx = x - key.x;
+			ori = (int)(pOri[posY + x] * 36.0f / _2PI);
+			if (ori < 0) ori += 36;
+			hist[ori] = pMag[posY + x] * expf(-(dx*dx + dy * dy) / factor);
 		}
 	}
 
-	float max = FLT_MIN;
+	float max = hist[0];
 	int theta = 0;
-
-	for (int i = 0; i < 36; i++)
+	for (int i = 1; i < 36; ++i)
 	{
-		if (hist[i] > max)
+		if (max < hist[i])
 		{
 			max = hist[i];
-			theta = i;
 		}
 	}
 
-	key.orientation = theta * _2PI / 36.0f;
+	key.orientation = (float)theta / 36.0f * _2PI;
 
-	for (int i = 0; i < 36; i++)
+	for (int i = 0; i < 36; ++i)
 	{
-		if (hist[i] > hist[theta] * ORIENT_THRES && abs(theta - i) > 1)
+		if (max * ORIENT_THRES < hist[i] && i != theta)
 		{
-			feature_sub.push_back(feature_t(key, i * _2PI / 36.0f));
+			feature_sub.push_back(feature_t(key, (float)i / 36.0f * _2PI));
 		}
 	}
 }
@@ -643,95 +573,6 @@ void CSift::assignOrientation()
 
 void CSift::descriptKey()
 {
-	float hist[8];
-
-	for (itr = feature.begin(); itr != feature.end(); itr++)
-	{
-		int o = itr->octave; // key octave
-		int l = itr->level; // key level
-		int kx = (int)itr->x; // key x
-		int ky = (int)itr->y; // key y
-		float kori = itr->orientation; // key orientation
-		int idx = (o >> 1) + l - 1; // index of gradient array
-		int pos = 0; // index of 128 dimension vector
-
-		if (kx > 6 && kx < m_width[o] - 8 && ky > 6 && ky < m_height[o] - 8)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					int bigRow = i * 4;
-					int bigCol = j * 4;
-					memset(hist, 0, 8 * sizeof(float));
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = (ky - 7 + bigRow + r) * m_wstep[o];
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = kx - 7 + bigCol + c;
-							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
-							while (ori < 0) ori += 8;
-
-							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					float max = FLT_MIN;
-					for (int k = 0; k < 8; k++)
-					{
-						if (hist[k] > max)
-							max = hist[k];
-					}
-					for (int k = 0; k < 8; k++)
-					{
-#ifdef VECTOR_NORM
-						itr->vec[pos++] = hist[k] / (5.0f * max);
-#else
-						itr->vec[pos++] = hist[k];
-#endif
-					}
-				}
-			}
-		}
-		else
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					int bigRow = i * 4;
-					int bigCol = j * 4;
-					memset(hist, 0, 8 * sizeof(float));
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = max(0, min(ky - 7 + bigRow + r, m_height[o] - 1));
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = max(0, min(kx - 7 + bigCol + c, m_width[i] - 1));
-							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
-							while (ori < 0) ori += 8;
-
-							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					float max = FLT_MIN;
-					for (int k = 0; k < 8; k++)
-					{
-						if (hist[k] > max)
-							max = hist[k];
-					}
-					for (int k = 0; k < 8; k++)
-					{
-#ifdef VECTOR_NORM
-						itr->vec[pos++] = hist[k] / (5.0f * max);
-#else
-						itr->vec[pos++] = hist[k];
-#endif
-					}
-				}
-			}
-		}
-	}
 }
 
 void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
@@ -892,7 +733,7 @@ void CSift::image2xB2F(CByteImage& src, CFloatImage& dst)
 		pDst = dst.GetPtr(r);
 		for (int c = 0; c < width; ++c)
 		{
-			pDst[c] = src.CubicConvIntpD(c / 2.0f, r / 2.0f);
+			pDst[c] = src.CubicConvIntp(c / 2.0f, r / 2.0f);
 		}
 	}
 }

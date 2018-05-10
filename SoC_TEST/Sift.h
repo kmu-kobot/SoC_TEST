@@ -109,8 +109,6 @@ protected:
 #ifndef BOXBLUR
 	void initGauss();
 #endif
-	void initMagWeight();
-	void initDesWeight();
 	void buildScaleSpace();
 	void showScaleSpace();
 	void buildDOG();

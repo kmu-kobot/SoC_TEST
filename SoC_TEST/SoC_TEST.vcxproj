@@ -183,6 +183,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Feature.h" />
     <ClInclude Include="ImageFrameWnd.h" />
     <ClInclude Include="ImageFrameWndManager.h" />
     <ClInclude Include="ImageView.h" />
@@ -200,6 +201,7 @@
     <ClInclude Include="VideoProcessing.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Feature.cpp" />
     <ClCompile Include="ImageFrameWnd.cpp" />
     <ClCompile Include="ImageFrameWndManager.cpp" />
     <ClCompile Include="ImageView.cpp" />

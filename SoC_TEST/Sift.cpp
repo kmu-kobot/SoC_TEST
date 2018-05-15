@@ -60,6 +60,8 @@ void CSift::buildSample(CByteImage imageIn, int i)
 	init(m_imageCmp[i]);
 	detectFeature(m_imageCmp[i]);
 	copyCmp(i);
+	sample[i].dimension = 128;
+	sample[i].buildKDTree(feature_sample[i], sample[i].root, 0, feature_sample[i].size() - 1, 0);
 }
 
 void CSift::init(CByteImage imageIn)
@@ -629,7 +631,7 @@ void CSift::descriptKey()
 		pOri = oriMap[idx];
 		pMag = magMap[idx];
 
-		if (7.0f / 4.0f * M_PI < kori || kori <= 1.0f / 4.0f * M_PI)
+		//if (7.0f / 4.0f * M_PI < kori || kori <= 1.0f / 4.0f * M_PI)
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -667,120 +669,120 @@ void CSift::descriptKey()
 				}
 			}
 		}
-		else if (1.0f / 4.0f * M_PI < kori && kori <= 3.0f / 4.0f * M_PI)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				int bigCol = i * 4;
-				for (int j = 3; j > -1; j--)
-				{
-					int bigRow = j * 4;
-					memset(hist, 0, 8 * sizeof(float));
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
-							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
-							while (ori < 0) ori += 8;
-
-							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					float max = FLT_MIN;
-					for (int k = 0; k < 8; k++)
-					{
-						if (hist[k] > max)
-							max = hist[k];
-					}
-					for (int k = 0; k < 8; k++)
-					{
-#ifdef VECTOR_NORM
-						itr->vec[pos++] = hist[k] / (5.0f * max);
-#else
-						itr->vec[pos++] = hist[k];
-#endif
-					}
-				}
-			}
-		}
-		else if (3.0f / 4.0f * M_PI < kori && kori <= 5.0f / 4.0f * M_PI)
-		{
-			for (int i = 3; i > -1; i--)
-			{
-				int bigRow = i * 4;
-				for (int j = 3; j > -1; j--)
-				{
-					int bigCol = j * 4;
-					memset(hist, 0, 8 * sizeof(float));
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
-							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
-							while (ori < 0) ori += 8;
-
-							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					float max = FLT_MIN;
-					for (int k = 0; k < 8; k++)
-					{
-						if (hist[k] > max)
-							max = hist[k];
-					}
-					for (int k = 0; k < 8; k++)
-					{
-#ifdef VECTOR_NORM
-						itr->vec[pos++] = hist[k] / (5.0f * max);
-#else
-						itr->vec[pos++] = hist[k];
-#endif
-					}
-				}
-			}
-		}
-		else if (5.0f / 4.0f * M_PI < kori && kori <= 7.0f / 4.0f * M_PI)
-		{
-			for (int i = 3; i > -1; i--)
-			{
-				int bigCol = i * 4;
-				for (int j = 0; j < 4; j++)
-				{
-					int bigRow = j * 4;
-					memset(hist, 0, 8 * sizeof(float));
-					for (int r = 0; r < 4; r++)
-					{
-						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
-						for (int c = 0; c < 4; c++)
-						{
-							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
-							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
-							while (ori < 0) ori += 8;
-
-							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
-						}
-					}
-					float max = FLT_MIN;
-					for (int k = 0; k < 8; k++)
-					{
-						if (hist[k] > max)
-							max = hist[k];
-					}
-					for (int k = 0; k < 8; k++)
-					{
-#ifdef VECTOR_NORM
-						itr->vec[pos++] = hist[k] / (5.0f * max);
-#else
-						itr->vec[pos++] = hist[k];
-#endif
-					}
-				}
-			}
-		}
+//		else if (1.0f / 4.0f * M_PI < kori && kori <= 3.0f / 4.0f * M_PI)
+//		{
+//			for (int i = 0; i < 4; i++)
+//			{
+//				int bigCol = i * 4;
+//				for (int j = 3; j > -1; j--)
+//				{
+//					int bigRow = j * 4;
+//					memset(hist, 0, 8 * sizeof(float));
+//					for (int r = 0; r < 4; r++)
+//					{
+//						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
+//						for (int c = 0; c < 4; c++)
+//						{
+//							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+//							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
+//							while (ori < 0) ori += 8;
+//
+//							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+//						}
+//					}
+//					float max = FLT_MIN;
+//					for (int k = 0; k < 8; k++)
+//					{
+//						if (hist[k] > max)
+//							max = hist[k];
+//					}
+//					for (int k = 0; k < 8; k++)
+//					{
+//#ifdef VECTOR_NORM
+//						itr->vec[pos++] = hist[k] / (5.0f * max);
+//#else
+//						itr->vec[pos++] = hist[k];
+//#endif
+//					}
+//				}
+//			}
+//		}
+//		else if (3.0f / 4.0f * M_PI < kori && kori <= 5.0f / 4.0f * M_PI)
+//		{
+//			for (int i = 3; i > -1; i--)
+//			{
+//				int bigRow = i * 4;
+//				for (int j = 3; j > -1; j--)
+//				{
+//					int bigCol = j * 4;
+//					memset(hist, 0, 8 * sizeof(float));
+//					for (int r = 0; r < 4; r++)
+//					{
+//						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
+//						for (int c = 0; c < 4; c++)
+//						{
+//							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+//							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
+//							while (ori < 0) ori += 8;
+//
+//							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+//						}
+//					}
+//					float max = FLT_MIN;
+//					for (int k = 0; k < 8; k++)
+//					{
+//						if (hist[k] > max)
+//							max = hist[k];
+//					}
+//					for (int k = 0; k < 8; k++)
+//					{
+//#ifdef VECTOR_NORM
+//						itr->vec[pos++] = hist[k] / (5.0f * max);
+//#else
+//						itr->vec[pos++] = hist[k];
+//#endif
+//					}
+//				}
+//			}
+//		}
+//		else if (5.0f / 4.0f * M_PI < kori && kori <= 7.0f / 4.0f * M_PI)
+//		{
+//			for (int i = 3; i > -1; i--)
+//			{
+//				int bigCol = i * 4;
+//				for (int j = 0; j < 4; j++)
+//				{
+//					int bigRow = j * 4;
+//					memset(hist, 0, 8 * sizeof(float));
+//					for (int r = 0; r < 4; r++)
+//					{
+//						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
+//						for (int c = 0; c < 4; c++)
+//						{
+//							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+//							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
+//							while (ori < 0) ori += 8;
+//
+//							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+//						}
+//					}
+//					float max = FLT_MIN;
+//					for (int k = 0; k < 8; k++)
+//					{
+//						if (hist[k] > max)
+//							max = hist[k];
+//					}
+//					for (int k = 0; k < 8; k++)
+//					{
+//#ifdef VECTOR_NORM
+//						itr->vec[pos++] = hist[k] / (5.0f * max);
+//#else
+//						itr->vec[pos++] = hist[k];
+//#endif
+//					}
+//				}
+//			}
+//		}
 	}
 }
 
@@ -836,25 +838,9 @@ void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G
 	}
 }
 
-float _CalcSIFTSqDist(const feature_t& k1, const feature_t& k2)
-{
-	const float *pk1, *pk2;
-
-	pk1 = k1.vec;
-	pk2 = k2.vec;
-
-	float dif;
-	float distsq = 0;
-	for (int i = 0; i<128; i++)
-	{
-		dif = *pk1++ - *pk2++;
-		distsq += dif * dif;
-	}
-	return distsq;
-}
-
 void CSift::keyMatching()
 {
+	feature_t* nearest;
 	int cnt[NUM_SAMPLE];
 	int best = 0;
 
@@ -862,6 +848,7 @@ void CSift::keyMatching()
 
 	for(int i = 0; i < NUM_SAMPLE; ++i)
 	{
+#ifndef KDTREE
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); itr++)
 		{
 			itr->minDist1 = itr->minDist2 = FLT_MAX;
@@ -885,11 +872,22 @@ void CSift::keyMatching()
 
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); ++itr)
 		{
-			if (itr->minDist1 < itr->minDist2 * 0.6f * 0.6f)
+			if (itr->minDist1 < itr->minDist2 * DIST_THRES)
 			{
 				++cnt[i];
 			}
 		}
+#else
+		for (itr = feature.begin(); itr != feature.end(); ++itr)
+		{
+			sample[i].NNSearch(*itr, sample[i].root, itr->nearest, itr->minDist1, itr->minDist2);
+			
+			if (itr->minDist1 < itr->minDist2 * DIST_THRES)
+			{
+				++cnt[i];
+			}
+		}
+#endif
 
 		if (cnt[best] < cnt[i])
 		{
@@ -934,15 +932,26 @@ void CSift::keyMatching()
 		memcpy(m_imageOutV.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
 	}
 
+#ifndef KDTREE
 	for (itr = feature_sample[best].begin(); itr != feature_sample[best].end(); itr++)
+#else
+	for(itr = feature.begin(); itr != feature.end(); ++itr)
+#endif
 	{
 		feature_t* nearkey = itr->nearest;
-		if (itr->minDist1 < itr->minDist2 * 0.6f * 0.6f)
+		if (itr->minDist1 < itr->minDist2 * DIST_THRES)
 		{
+#ifndef KDTREE
 			DrawLine(m_imageOutH, itr->nx, itr->ny,
 				nearkey->nx + width_Cmp, nearkey->ny, 255, 0, 0);
 			DrawLine(m_imageOutV, itr->nx, itr->ny,
 				nearkey->nx, nearkey->ny + height_Cmp, 255, 0, 0);
+#else
+			DrawLine(m_imageOutH, nearkey->nx, nearkey->ny,
+				itr->nx + width_Cmp, itr->ny, 255, 0, 0);
+			DrawLine(m_imageOutV, nearkey->nx, nearkey->ny,
+				itr->nx, itr->ny + height_Cmp, 255, 0, 0);
+#endif
 		}
 	}
 	ShowImage(m_imageOutH, "H");

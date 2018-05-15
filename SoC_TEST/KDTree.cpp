@@ -1,6 +1,12 @@
 #include "stdafx.h"
 #include "KDTree.h"
 
+Node::Node()
+	:left(NULL), right(NULL)
+{
+
+}
+
 Node::Node(feature_t* key, int axis)
 	:axis(axis), value(key->vec[axis]), left(NULL), right(NULL), key(key)
 {
@@ -14,13 +20,17 @@ Node::~Node()
 		delete right;
 }
 
+CKDTree::CKDTree()
+{
+}
+
 CKDTree::CKDTree(int d)
 	:dimension(d)
 {
 }
 
-CKDTree::CKDTree(Node root, int d)
-	:root(&root), dimension(d)
+CKDTree::CKDTree(Node* root, int d)
+	:root(root), dimension(d)
 {
 }
 
@@ -32,18 +42,25 @@ CKDTree::~CKDTree()
 void sort(std::vector<feature_t>& feature, int left, int right, int axis)
 {
 	int i = left, j = right;
-	float pivot = feature[(left + right) >> 1].vec[axis];
+	float pivot = (feature.begin() + ((left + right) >> 1))->vec[axis];
+	std::vector<feature_t>::iterator itr1, itr2;
 	feature_t temp;
+	float tempVec[128];
+	
 
 	do
 	{
-		while (feature[i].vec[axis] <= pivot)
+		while ((feature.begin() + i)->vec[axis] < pivot)
 			++i;
-		while (feature[j].vec[axis] > pivot)
+		while ((feature.begin() + j)->vec[axis] > pivot)
 			--j;
 		if (i <= j)
 		{
-			std::iter_swap(feature.begin() + i++, feature.begin() + j--);
+			itr1 = feature.begin() + i++;
+			itr2 = feature.begin() + j--;
+			memcpy(&temp, &*itr1, sizeof(feature_t));
+			memcpy(&*itr1, &*itr2, sizeof(feature_t));
+			memcpy(&*itr2, &temp, sizeof(feature_t));
 		}
 	} while (i <= j);
 
@@ -83,35 +100,30 @@ void CKDTree::buildKDTree(std::vector<feature_t>& feature, Node*& n, int left, i
 void CKDTree::NNSearch(const feature_t& q, Node* n, feature_t*& p, float& d1, float& d2)
 {
 	bool search_first;
-	if (n->left == NULL && n->right == NULL)
+	float w = _CalcSIFTSqDist(q, *n->key);
+	if (w < d1)
 	{
-		float w = _CalcSIFTSqDist(q, *p);
-		if (w < d1)
-		{
-			d2 = d1;
-			d1 = w;
-			p = n->key;
-		}
-		else if (w < d2)
-		{
-			d2 = w;
-		}
+		d2 = d1;
+		d1 = w;
+		p = n->key;
+	}
+	else if (w < d2)
+	{
+		d2 = w;
+	}
+
+	if (q.vec[n->axis] < n->value)
+	{
+		if (n->left != NULL && q.vec[n->axis] - d2 <= n->value)
+			NNSearch(q, n->left, p, d1, d2);
+		if (n->right != NULL && q.vec[n->axis] + d2 > n->value)
+			NNSearch(q, n->right, p, d1, d2);
 	}
 	else
 	{
-		if (q.vec[n->axis] < n->value)
-		{
-			if (q.vec[n->axis] - d2 <= n->value)
-				NNSearch(q, n->left, p, d1, d2);
-			if (q.vec[n->axis] + d2 > n->value)
-				NNSearch(q, n->right, p, d1, d2);
-		}
-		else
-		{
-			if (q.vec[n->axis] + d2 > n->value)
-				NNSearch(q, n->right, p, d1, d2);
-			if (q.vec[n->axis] - d2 <= n->value)
-				NNSearch(q, n->left, p, d1, d2);
-		}
+		if (n->right != NULL && q.vec[n->axis] + d2 > n->value)
+			NNSearch(q, n->right, p, d1, d2);
+		if (n->left != NULL && q.vec[n->axis] - d2 <= n->value)
+			NNSearch(q, n->left, p, d1, d2);
 	}
 }

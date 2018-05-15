@@ -1,10 +1,13 @@
 #pragma once
 #include <stack>
-#include "Sift.h"
+#include <vector>
+#include <string>
+#include "Feature.h"
 
 class Node
 {
 public:
+	Node();
 	Node(feature_t *key, int axis);
 	~Node();
 
@@ -17,8 +20,9 @@ public:
 class CKDTree
 {
 public:
+	CKDTree();
 	CKDTree(int d);
-	CKDTree(Node root, int d);
+	CKDTree(Node* root, int d);
 	~CKDTree();
 
 	void buildKDTree(std::vector<feature_t>& feature, Node*& n, int left, int right, int axis);

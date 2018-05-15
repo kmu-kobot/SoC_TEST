@@ -548,7 +548,7 @@ void CSift::buildGradient()
 void CSift::judgeOrientation(feature_t& key)
 {
 	int size, radius, o, kx, ky, x, y, posY, ori, idx_Map, width, height, wstep;
-	float hist[36], factor, dx, dy, *pMag, *pOri;
+	float hist[NUM_BIN], factor, dx, dy, *pMag, *pOri;
 
 	o = key.octave;
 	kx = (int)(key.x + 0.5f);
@@ -563,7 +563,7 @@ void CSift::judgeOrientation(feature_t& key)
 	height = m_height[o];
 	wstep = m_wstep[o];
 
-	memset(hist, 0, 36 * sizeof(float));
+	memset(hist, 0, NUM_BIN * sizeof(float));
 
 	for (int r = -radius; r <= radius; ++r)
 	{
@@ -574,15 +574,15 @@ void CSift::judgeOrientation(feature_t& key)
 		{
 			x = IN_IMG(kx + c, 0, width - 1);
 			dx = x - key.x;
-			ori = (int)(pOri[posY + x] * 36.0f / _2PI);
-			if (ori < 0) ori += 36;
+			ori = (int)(pOri[posY + x] * NUM_BIN_F / _2PI);
+			if (ori < 0) ori += NUM_BIN;
 			hist[ori] = pMag[posY + x] * expf(-(dx*dx + dy * dy) / factor);
 		}
 	}
 
 	float max = hist[0];
 	int theta = 0;
-	for (int i = 1; i < 36; ++i)
+	for (int i = 1; i < NUM_BIN; ++i)
 	{
 		if (max < hist[i])
 		{
@@ -590,13 +590,13 @@ void CSift::judgeOrientation(feature_t& key)
 		}
 	}
 
-	key.orientation = (float)theta / 36.0f * _2PI;
+	key.orientation = (float)theta / NUM_BIN_F * _2PI;
 
-	for (int i = 0; i < 36; ++i)
+	for (int i = 0; i < NUM_BIN; ++i)
 	{
 		if (max * ORIENT_THRES < hist[i] && i != theta)
 		{
-			feature_sub.push_back(feature_t(key, (float)i / 36.0f * _2PI));
+			feature_sub.push_back(feature_t(key, (float)i / NUM_BIN_F * _2PI));
 		}
 	}
 }
@@ -625,25 +625,29 @@ void CSift::descriptKey()
 		int idx = (o >> 1) + l - 1; // index of gradient array
 		int pos = 0; // index of 128 dimension vector
 
-		if (kx > 6 && kx < m_width[o] - 8 && ky > 6 && ky < m_height[o] - 8)
+		float *pOri, *pMag;
+		pOri = oriMap[idx];
+		pMag = magMap[idx];
+
+		if (7.0f / 4.0f * M_PI < kori || kori <= 1.0f / 4.0f * M_PI)
 		{
 			for (int i = 0; i < 4; i++)
 			{
+				int bigRow = i * 4;
 				for (int j = 0; j < 4; j++)
 				{
-					int bigRow = i * 4;
 					int bigCol = j * 4;
 					memset(hist, 0, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
-						int posY = (ky - 7 + bigRow + r) * m_wstep[o];
+						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = kx - 7 + bigCol + c;
-							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
+							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
 							while (ori < 0) ori += 8;
 
-							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}
 					float max = FLT_MIN;
@@ -663,25 +667,101 @@ void CSift::descriptKey()
 				}
 			}
 		}
-		else
+		else if (1.0f / 4.0f * M_PI < kori && kori <= 3.0f / 4.0f * M_PI)
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				for (int j = 0; j < 4; j++)
+				int bigCol = i * 4;
+				for (int j = 3; j > -1; j--)
 				{
-					int bigRow = i * 4;
+					int bigRow = j * 4;
+					memset(hist, 0, 8 * sizeof(float));
+					for (int r = 0; r < 4; r++)
+					{
+						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
+						for (int c = 0; c < 4; c++)
+						{
+							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
+							while (ori < 0) ori += 8;
+
+							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+#ifdef VECTOR_NORM
+						itr->vec[pos++] = hist[k] / (5.0f * max);
+#else
+						itr->vec[pos++] = hist[k];
+#endif
+					}
+				}
+			}
+		}
+		else if (3.0f / 4.0f * M_PI < kori && kori <= 5.0f / 4.0f * M_PI)
+		{
+			for (int i = 3; i > -1; i--)
+			{
+				int bigRow = i * 4;
+				for (int j = 3; j > -1; j--)
+				{
 					int bigCol = j * 4;
 					memset(hist, 0, 8 * sizeof(float));
 					for (int r = 0; r < 4; r++)
 					{
-						int posY = max(0, min(ky - 7 + bigRow + r, m_height[o] - 1)) * m_wstep[o];
+						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
 						for (int c = 0; c < 4; c++)
 						{
-							int posX = max(0, min(kx - 7 + bigCol + c, m_width[i] - 1));
-							int ori = (int)((oriMap[idx][posY + posX] - kori) * 8.0f / _2PI);
+							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
 							while (ori < 0) ori += 8;
 
-							hist[ori] += magMap[idx][posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
+						}
+					}
+					float max = FLT_MIN;
+					for (int k = 0; k < 8; k++)
+					{
+						if (hist[k] > max)
+							max = hist[k];
+					}
+					for (int k = 0; k < 8; k++)
+					{
+#ifdef VECTOR_NORM
+						itr->vec[pos++] = hist[k] / (5.0f * max);
+#else
+						itr->vec[pos++] = hist[k];
+#endif
+					}
+				}
+			}
+		}
+		else if (5.0f / 4.0f * M_PI < kori && kori <= 7.0f / 4.0f * M_PI)
+		{
+			for (int i = 3; i > -1; i--)
+			{
+				int bigCol = i * 4;
+				for (int j = 0; j < 4; j++)
+				{
+					int bigRow = j * 4;
+					memset(hist, 0, 8 * sizeof(float));
+					for (int r = 0; r < 4; r++)
+					{
+						int posY = IN_IMG(ky - 7 + bigRow + r, 0, m_height[o] - 1) * m_wstep[o];
+						for (int c = 0; c < 4; c++)
+						{
+							int posX = IN_IMG(kx - 7 + bigCol + c, 0, m_width[o] - 1);
+							int ori = (int)((pOri[posY + posX] - kori) * 8.0f / _2PI);
+							while (ori < 0) ori += 8;
+
+							hist[ori] += pMag[posY + posX] * des_Weight[(bigRow + r) * DES_SIZE + bigCol + c];
 						}
 					}
 					float max = FLT_MIN;

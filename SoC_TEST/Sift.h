@@ -2,12 +2,13 @@
 #include "MyImage.h"
 #include "MyImageFunc.h"
 #include "ImageFrameWndManager.h"
+#include "KDTree.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string>
 
 #define BOXBLUR
-#define VECTOR_NORM
+//#define VECTOR_NORM
 #define NUM_SAMPLE 2
 #define NUM_OCTAVE 4
 #define NUM_SCALE_SPACE_LEVEL 5
@@ -25,6 +26,8 @@
 #define FEATURE_RADIUS 1
 #define _2PI (M_PI * 2.0)
 #define COEF_MAG_SIGMA 1.5f
+#define NUM_BIN 36
+#define NUM_BIN_F (float)NUM_BIN
 #define ORIENT_THRES 0.8f
 #define DES_SIZE 16
 #define DES_RADIUS ((float)DES_SIZE / 2.0f)
@@ -169,5 +172,7 @@ protected:
 	std::vector<feature_t> feature_sample[NUM_SAMPLE];
 	std::vector<feature_t>::iterator itr;
 	std::vector<feature_t>::iterator itr2;
+
 };
 
+float _CalcSIFTSqDist(const feature_t& k1, const feature_t& k2);

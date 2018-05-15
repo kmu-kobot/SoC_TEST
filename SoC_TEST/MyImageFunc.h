@@ -2,7 +2,7 @@
 
 #include "MyImage.h"
 
-#define IN_IMG(x, lo, hi) (x < lo)? lo : x > hi ? hi : x
+#define IN_IMG(x, lo, hi) ((x < lo)? lo : x > hi ? hi : x)
 #define MIN(a,b)  ((a) > (b) ? (b) : (a))
 #define MAX(a,b)  ((a) < (b) ? (b) : (a))
 

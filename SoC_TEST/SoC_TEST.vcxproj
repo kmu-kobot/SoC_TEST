@@ -186,6 +186,7 @@
     <ClInclude Include="ImageFrameWnd.h" />
     <ClInclude Include="ImageFrameWndManager.h" />
     <ClInclude Include="ImageView.h" />
+    <ClInclude Include="KDTree.h" />
     <ClInclude Include="LoadImageFromFileDialog.h" />
     <ClInclude Include="MyImage.h" />
     <ClInclude Include="MyImageFunc.h" />
@@ -202,6 +203,7 @@
     <ClCompile Include="ImageFrameWnd.cpp" />
     <ClCompile Include="ImageFrameWndManager.cpp" />
     <ClCompile Include="ImageView.cpp" />
+    <ClCompile Include="KDTree.cpp" />
     <ClCompile Include="LoadImageFromFileDialog.cpp" />
     <ClCompile Include="MyImageFunc.cpp" />
     <ClCompile Include="Segmentation.cpp" />

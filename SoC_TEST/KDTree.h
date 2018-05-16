@@ -26,7 +26,7 @@ public:
 	~CKDTree();
 
 	void buildKDTree(std::vector<feature_t>& feature, Node*& n, int left, int right, int axis);
-	void NNSearch(const feature_t& q, Node* n, feature_t*& p, float& d1, float& d2);
+	void NNSearch(feature_t& q, Node* n, feature_t*& p, float& d1, float& d2);
 
 	int dimension;
 	Node *root;

@@ -848,11 +848,11 @@ void CSift::keyMatching()
 
 	for(int i = 0; i < NUM_SAMPLE; ++i)
 	{
-#ifndef KDTREE
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); itr++)
 		{
 			itr->minDist1 = itr->minDist2 = FLT_MAX;
 
+#ifndef KDTREE
 			for (itr2 = feature.begin(); itr2 != feature.end(); itr2++)
 			{
 				float distSq = _CalcSIFTSqDist(*itr, *itr2);
@@ -869,6 +869,15 @@ void CSift::keyMatching()
 				}
 			}
 		}
+#else
+		}
+		for (itr = feature.begin(); itr != feature.end(); ++itr)
+		{
+			itr->minDist1 = itr->minDist2 = FLT_MAX;
+
+			sample[i].NNSearch(*itr, sample[i].root, itr->nearest, itr->minDist1, itr->minDist2);
+		}
+#endif
 
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); ++itr)
 		{
@@ -877,17 +886,6 @@ void CSift::keyMatching()
 				++cnt[i];
 			}
 		}
-#else
-		for (itr = feature.begin(); itr != feature.end(); ++itr)
-		{
-			sample[i].NNSearch(*itr, sample[i].root, itr->nearest, itr->minDist1, itr->minDist2);
-			
-			if (itr->minDist1 < itr->minDist2 * DIST_THRES)
-			{
-				++cnt[i];
-			}
-		}
-#endif
 
 		if (cnt[best] < cnt[i])
 		{
@@ -932,26 +930,19 @@ void CSift::keyMatching()
 		memcpy(m_imageOutV.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
 	}
 
-#ifndef KDTREE
 	for (itr = feature_sample[best].begin(); itr != feature_sample[best].end(); itr++)
-#else
-	for(itr = feature.begin(); itr != feature.end(); ++itr)
-#endif
 	{
-		feature_t* nearkey = itr->nearest;
+#ifdef KDTREE
+		if (itr->nearest == NULL)
+			continue;
+#endif
+		nearest = itr->nearest;
 		if (itr->minDist1 < itr->minDist2 * DIST_THRES)
 		{
-#ifndef KDTREE
 			DrawLine(m_imageOutH, itr->nx, itr->ny,
-				nearkey->nx + width_Cmp, nearkey->ny, 255, 0, 0);
+				nearest->nx + width_Cmp, nearest->ny, 255, 0, 0);
 			DrawLine(m_imageOutV, itr->nx, itr->ny,
-				nearkey->nx, nearkey->ny + height_Cmp, 255, 0, 0);
-#else
-			DrawLine(m_imageOutH, nearkey->nx, nearkey->ny,
-				itr->nx + width_Cmp, itr->ny, 255, 0, 0);
-			DrawLine(m_imageOutV, nearkey->nx, nearkey->ny,
-				itr->nx, itr->ny + height_Cmp, 255, 0, 0);
-#endif
+				nearest->nx, nearest->ny + height_Cmp, 255, 0, 0);
 		}
 	}
 	ShowImage(m_imageOutH, "H");

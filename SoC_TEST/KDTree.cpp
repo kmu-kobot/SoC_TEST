@@ -97,10 +97,24 @@ void CKDTree::buildKDTree(std::vector<feature_t>& feature, Node*& n, int left, i
 		buildKDTree(feature, n->right, pivot + 1, right, axis - 1);
 }
 
-void CKDTree::NNSearch(const feature_t& q, Node* n, feature_t*& p, float& d1, float& d2)
+void updateMin(feature_t* p, float w, feature_t *q)
 {
-	bool search_first;
+	if (w < p->minDist1)
+	{
+		p->minDist2 = p->minDist2;
+		p->minDist1 = w;
+		p->nearest = q;
+	}
+	else if (w < p->minDist2)
+	{
+		p->minDist2 = w;
+	}
+}
+
+void CKDTree::NNSearch(feature_t& q, Node* n, feature_t*& p, float& d1, float& d2)
+{
 	float w = _CalcSIFTSqDist(q, *n->key);
+	updateMin(n->key, w, &q);
 	if (w < d1)
 	{
 		d2 = d1;

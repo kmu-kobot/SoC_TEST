@@ -20,7 +20,7 @@ typedef struct Feature
 	Feature() {}
 
 	Feature(int o, int l, float x, float y, float v)
-		:octave(o), level(l), x(x), y(y), value(v), minDist1(FLT_MAX), minDist2(FLT_MAX)
+		:octave(o), level(l), x(x), y(y), value(v), nearest(NULL), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{
 		if (!octave)
 		{
@@ -37,7 +37,7 @@ typedef struct Feature
 	}
 
 	Feature(int o, int l, int x, int y, float v)
-		:octave(o), level(l), x((float)x), y((float)y), value(v), minDist1(FLT_MAX), minDist2(FLT_MAX)
+		:octave(o), level(l), x((float)x), y((float)y), value(v), nearest(NULL), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{
 		if (!octave)
 		{
@@ -54,11 +54,11 @@ typedef struct Feature
 	}
 
 	Feature(const Feature& key, float ori)
-		:octave(key.octave), level(key.level), scale(key.scale), nscale(key.nscale), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(ori), minDist1(FLT_MAX), minDist2(FLT_MAX)
+		:octave(key.octave), level(key.level), scale(key.scale), nscale(key.nscale), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(ori), nearest(NULL), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{}
 
 	Feature(const Feature& key)
-		:octave(key.octave), level(key.level), scale(key.scale), nscale(key.nscale), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(key.orientation), minDist1(FLT_MAX), minDist2(FLT_MAX)
+		:octave(key.octave), level(key.level), scale(key.scale), nscale(key.nscale), x(key.x), y(key.y), value(key.value), nx(key.nx), ny(key.ny), orientation(key.orientation), nearest(key.nearest), minDist1(FLT_MAX), minDist2(FLT_MAX)
 	{}
 }feature_t;
 #endif

@@ -43,7 +43,7 @@ public:
 	CSift();
 	~CSift();
 	void init(CByteImage imageIn);
-	void detectFeature(CByteImage imageIn);
+	void detectFeature(CByteImage imageIn, const char* name = "");
 
 	void buildSample(CByteImage imageCmp, int i);
 	void keyMatching();
@@ -59,7 +59,7 @@ protected:
 	void buildDOG();
 	void showDOG();
 	void buildFeature();
-	void showFeature();
+	void showFeature(const char* name);
 	bool subPixelize(feature_t& key, int nAdjustment);
 	void accurateKey();
 	void buildGradient();
@@ -76,6 +76,7 @@ protected:
 	CByteImage m_imageIn;
 	CByteImage m_imageInGray;
 	CByteImage m_imageCmp[NUM_SAMPLE];
+	CByteImage m_imageOut;
 	CByteImage m_imageOutH;
 	CByteImage m_imageOutV;
 	CFloatImage ScaleTemp[NUM_OCTAVE];

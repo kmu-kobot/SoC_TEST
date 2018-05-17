@@ -58,7 +58,7 @@ void CSift::buildSample(CByteImage imageIn, int i)
 {
 	m_imageCmp[i] = imageIn;
 	init(m_imageCmp[i]);
-	detectFeature(m_imageCmp[i]);
+	detectFeature(m_imageCmp[i], std::to_string(i).c_str());
 	copyCmp(i);
 	sample[i].dimension = 128;
 	sample[i].buildKDTree(feature_sample[i], sample[i].root, 0, feature_sample[i].size() - 1, 0);
@@ -164,7 +164,7 @@ void CSift::initDesWeight()
 		}
 }
 
-void CSift::detectFeature(CByteImage imageIn)
+void CSift::detectFeature(CByteImage imageIn, const char* name)
 {
 	m_imageIn = imageIn;
 	m_imageInGray = imageIn.GetChannel() == 1 ? imageIn : RGB2Gray(imageIn);
@@ -174,7 +174,7 @@ void CSift::detectFeature(CByteImage imageIn)
 	//showDOG();
 	buildFeature();
 	accurateKey();
-	showFeature();
+	showFeature(name);
 	buildGradient();
 	assignOrientation();
 	descriptKey();
@@ -280,10 +280,10 @@ void CSift::buildFeature()
 	}
 }
 
-void CSift::showFeature()
+void CSift::showFeature(const char* name)
 {
 	static int width, height;
-	m_imageOutH = m_imageIn;
+	m_imageOut = m_imageIn;
 	width = m_imageIn.GetWidth();
 	height = m_imageIn.GetHeight();
 	for (itr = feature.begin(); itr != feature.end(); ++itr)
@@ -292,13 +292,13 @@ void CSift::showFeature()
 		{
 			for (int c = -FEATURE_RADIUS; c < FEATURE_RADIUS + 1; ++c)
 			{
-				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 0) = 255;
-				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 1) = 255;
-				m_imageOutH.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 2) = 255;
+				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 0) = 255;
+				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 1) = 255;
+				m_imageOut.GetAt(IN_IMG(itr->nx + c, 0, width - 1), IN_IMG(itr->ny + r, 0, height - 1), 2) = 255;
 			}
 		}
 	}
-	ShowImage(m_imageOutH);
+	ShowImage(m_imageOut, name);
 }
 
 bool solve(const float* H, const float* D, float* B)

@@ -113,6 +113,10 @@ void updateMin(feature_t* p, float w, feature_t *q)
 
 void CKDTree::NNSearch(feature_t& q, Node* n, feature_t*& p, float& d1, float& d2)
 {
+	if (n == NULL)
+	{
+		return;
+	}
 	float w = _CalcSIFTSqDist(q, *n->key);
 	updateMin(n->key, w, &q);
 	if (w < d1)

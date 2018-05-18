@@ -887,7 +887,7 @@ void CSift::keyMatching()
 			}
 		}
 
-		if (cnt[best] < cnt[i])
+		if ((float)cnt[best] / (float)feature_sample[i].size() < (float)cnt[i] / (float)feature_sample[i].size())
 		{
 			best = i;
 		}

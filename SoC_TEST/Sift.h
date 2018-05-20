@@ -7,6 +7,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <string>
+#include <unordered_map>
 
 #define BOXBLUR
 #define VECTOR_NORM
@@ -36,6 +37,10 @@
 #define DIST_THRES (0.6f * 0.6f)
 #define KDTREE
 
+typedef struct CntPoint
+{
+	int x, y, cnt;
+};
 
 class CSift
 {
@@ -47,6 +52,8 @@ public:
 
 	void buildSample(CByteImage imageCmp, int i);
 	void keyMatching();
+
+	void getObjectArea(Point& leftTop, Point& rightBottom);
 
 protected:
 #ifndef BOXBLUR
@@ -71,6 +78,9 @@ protected:
 	void gaussBlur(CFloatImage& src, CFloatImage& dst, int level);
 
 	void copyCmp(int i);
+
+public:
+	Point area[2];
 
 protected:
 	CByteImage m_imageIn;
@@ -107,9 +117,12 @@ protected:
 
 	float des_Weight[DES_SIZE * DES_SIZE];
 
+	int matched;
+
 	std::vector<feature_t> feature;
 	std::vector<feature_t> feature_sub;
 	std::vector<feature_t> feature_sample[NUM_SAMPLE];
+	std::vector<feature_t> feature_matched[NUM_SAMPLE];
 	std::vector<feature_t>::iterator itr;
 	std::vector<feature_t>::iterator itr2;
 	CKDTree sample[NUM_SAMPLE];

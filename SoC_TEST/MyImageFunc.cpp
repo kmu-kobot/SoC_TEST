@@ -1,6 +1,59 @@
 #include "stdafx.h"
 #include "MyImageFunc.h"
 
+
+void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
+{
+	ASSERT(canvas.GetChannel() == 3);
+
+	int xs, ys, xe, ye;
+	if (x1 == x2)
+	{
+		if (y1 < y2) { ys = y1; ye = y2; }
+		else { ys = y2; ye = y1; }
+		for (int r = ys; r <= ye; r++)
+		{
+			canvas.GetAt(x1, r, 0) = B;
+			canvas.GetAt(x1, r, 1) = G;
+			canvas.GetAt(x1, r, 2) = R;
+		}
+		return;
+	}
+
+	double a = (double)(y2 - y1) / (x2 - x1);
+	int nHeight = canvas.GetHeight();
+
+	if ((a>-1) && (a<1))
+	{
+		if (x1 < x2) { xs = x1; xe = x2; ys = y1; ye = y2; }
+		else { xs = x2; xe = x1; ys = y2; ye = y1; }
+		for (int c = xs; c <= xe; c++)
+		{
+			int r = (int)(a*(c - xs) + ys + 0.5);
+			if (r<0 || r >= nHeight)
+				continue;
+			canvas.GetAt(c, r, 0) = B;
+			canvas.GetAt(c, r, 1) = G;
+			canvas.GetAt(c, r, 2) = R;
+		}
+	}
+	else
+	{
+		double invA = 1.0 / a;
+		if (y1 < y2) { ys = y1; ye = y2; xs = x1; xe = x2; }
+		else { ys = y2; ye = y1; xs = x2; xe = x1; }
+		for (int r = ys; r <= ye; r++)
+		{
+			int c = (int)(invA*(r - ys) + xs + 0.5);
+			if (r<0 || r >= nHeight)
+				continue;
+			canvas.GetAt(c, r, 0) = B;
+			canvas.GetAt(c, r, 1) = G;
+			canvas.GetAt(c, r, 2) = R;
+		}
+	}
+}
+
 // 논리 연산자 정의
 void ANDImage(const CByteImage& src1, const CByteImage& src2, CByteImage& dst)
 {

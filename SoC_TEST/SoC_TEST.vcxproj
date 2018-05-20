@@ -197,6 +197,7 @@
     <ClInclude Include="ImageView.h" />
     <ClInclude Include="KDTree.h" />
     <ClInclude Include="LoadImageFromFileDialog.h" />
+    <ClInclude Include="MeanShift.h" />
     <ClInclude Include="MyImage.h" />
     <ClInclude Include="MyImageFunc.h" />
     <ClInclude Include="resource.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="ImageView.cpp" />
     <ClCompile Include="KDTree.cpp" />
     <ClCompile Include="LoadImageFromFileDialog.cpp" />
+    <ClCompile Include="MeanShift.cpp" />
     <ClCompile Include="MyImageFunc.cpp" />
     <ClCompile Include="Segmentation.cpp" />
     <ClCompile Include="Sift.cpp" />

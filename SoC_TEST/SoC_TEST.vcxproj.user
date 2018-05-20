@@ -5,5 +5,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <RESOURCE_FILE>SoCTEST.rc</RESOURCE_FILE>
+    <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
 </Project>

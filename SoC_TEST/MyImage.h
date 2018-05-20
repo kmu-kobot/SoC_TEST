@@ -5,6 +5,20 @@
 #define CLIP(x) (x < 0)? 0 : x > 255 ? 255 : x
 #define IN_IMG(x, lo, hi) (x < lo)? lo : x > hi ? hi : x
 
+#ifndef __POINT__
+#define __POINT__
+struct Point {
+	int x;
+	int y;
+
+	bool operator==(const Point& p) const
+	{
+		return this->x == p.x && this->y == p.y;
+	}
+};
+#endif
+
+
 template <typename T>
 class CMyImage
 {

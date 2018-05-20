@@ -2,12 +2,20 @@
 #include "MeanShift.h"
 #include "MyImageFunc.h"
 #include "ImageFrameWndManager.h"
+#include <math.h>
 
 
-MeanShift::MeanShift(Point p, int fs)
+MeanShift::MeanShift(Point leftTop, Point rightBottom, int fs)
 {
 	this->pastPoint = 0;
-	this->localCenter = p;
+	this->localCenter = {
+		((rightBottom.x + leftTop.x) + 320) / 2,
+		((rightBottom.y + leftTop.y) + 240) / 2
+	};
+
+	this->width = rightBottom.x - leftTop.x;
+	this->height = rightBottom.y - leftTop.y;
+
 	this->featureColorSize = fs;
 	this->isSetFeatureColor = false;
 }
@@ -18,7 +26,7 @@ MeanShift::~MeanShift()
 }
 
 
-void MeanShift::tracking(CByteImage & originColorImage)
+bool MeanShift::tracking(CByteImage & originColorImage)
 {
 	CDoubleImage m_imageHSVAdj = RGB2HSV(originColorImage);
 	CByteImage imageIn = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
@@ -33,7 +41,7 @@ void MeanShift::tracking(CByteImage & originColorImage)
 	int nWidth = imageIn.GetWidth();//640
 	int nHeight = imageIn.GetHeight();//480
 
-	int rangeX = 40, rangeY = 40;
+	int rangeX = this->width / 2, rangeY = this->height / 2;
 
 	int color;
 	int checkArea[8] = { 1,1,1,1,1,1,1,1 };
@@ -71,9 +79,9 @@ void MeanShift::tracking(CByteImage & originColorImage)
 		endRow = rangeY * 2 + startRow;
 		endCol = rangeX * 2 + startCol;
 
-		for (int r = startRow; r < endRow; r++)
+		for (int r = startRow; r < endRow; r+=2)
 		{
-			for (int c = startCol; c < endCol; c++)
+			for (int c = startCol; c < endCol; c+=2)
 			{
 				t = yoloVideo[r][c];
 				if (t == -1) {
@@ -108,9 +116,12 @@ void MeanShift::tracking(CByteImage & originColorImage)
 
 	bool isCheckFrequency = true; // !(0.75 <= checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2) * arrayLength) && checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2)*arrayLength) <= 1.2);
 
-	if (isCheckFrequency && sum > 200) {
+	if (isCheckFrequency && sum > (this->width * this->height)*0.7) {
 		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
 		this->localCenter.y = checkPointY(this->localCenter.y - (move[maxIndex]->y + s) * repeat);
+	}
+	else {
+		return false;
 	}
 
 	pastPoint = checkArea[maxIndex];
@@ -121,30 +132,41 @@ void MeanShift::tracking(CByteImage & originColorImage)
 	int width = 1;
 	for (int i = -width; i < width; i++) {
 		for (int j = -width; j < width; j++) {
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
 
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
 		}
 	}
 
 	ShowImage(originColorImage, "mmm");
 
+	return true;
 }
 
-void MeanShift::setFeatureColor(CByteImage & m_imageIn, Point start, Point end)
+void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 {
+	Point start = {
+		this->localCenter.x - (this->width / 2),
+		this->localCenter.y - (this->height / 2)
+	};
+
+	Point end = {
+		this->localCenter.x + (this->width / 2),
+		this->localCenter.y + (this->height / 2)
+	};
+
 	std::map<long, int> m;
 	std::map<int, std::vector<int>> result;
 	bool chk = false;
 
 	CDoubleImage m_imageHSVAdj = RGB2HSV(m_imageIn);
 
-	this->DrawLine(m_imageIn, 160, 120, 160, 180, 255, 0, 0);
-	this->DrawLine(m_imageIn, 160, 120, 220, 120, 255, 0, 0);
+	DrawLine(m_imageIn, start.x, start.y, end.x, end.y, 255, 0, 0);
+	DrawLine(m_imageIn, end.x, start.y, start.x, end.y, 255, 0, 0);
 	ShowImage(m_imageIn, "target");
 
 	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
@@ -219,83 +241,31 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn, Point start, Point end)
 
 int MeanShift::checkPointX(int p)
 {
-	if (5 <= p && p <= 315) {
+	if (5 <= p && p <= 638) {
 		return p;
 	}
 	else if (5 > p) {
 		return 5;
 	}
 	else {
-		return 314;
+		return 637;
 	}
 }
 
 int MeanShift::checkPointY(int p)
 {
-	if (3 <= p && p <= 237) {
+	if (3 <= p && p <= 478) {
 		return p;
 	}
 	else if (3 > p) {
 		return 3;
 	}
 	else {
-		return 236;
+		return 477;
 	}
 }
 
 bool MeanShift::getIsSetFeatureColor()
 {
 	return this->isSetFeatureColor;
-}
-
-void MeanShift::DrawLine(CByteImage & input, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
-{
-	ASSERT(input.GetChannel() == 3);
-
-	int xs, ys, xe, ye;
-	if (x1 == x2) // 수직선
-	{
-		if (y1 < y2) { ys = y1; ye = y2; }
-		else { ys = y2; ye = y1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			input.GetAt(x1, r, 0) = B;
-			input.GetAt(x1, r, 1) = G;
-			input.GetAt(x1, r, 2) = R;
-		}
-		return;
-	}
-
-	double a = (double)(y2 - y1) / (x2 - x1); // 기울기
-	int nHeight = input.GetHeight();
-
-	if ((a>-1) && (a<1)) // 가로축에 가까움
-	{
-		if (x1 < x2) { xs = x1; xe = x2; ys = y1; ye = y2; }
-		else { xs = x2; xe = x1; ys = y2; ye = y1; }
-		for (int c = xs; c <= xe; c++)
-		{
-			int r = (int)(a*(c - xs) + ys + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			input.GetAt(c, r, 0) = B;
-			input.GetAt(c, r, 1) = G;
-			input.GetAt(c, r, 2) = R;
-		}
-	}
-	else // 세로축에 가까움
-	{
-		double invA = 1.0 / a;
-		if (y1 < y2) { ys = y1; ye = y2; xs = x1; xe = x2; }
-		else { ys = y2; ye = y1; xs = x2; xe = x1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			int c = (int)(invA*(r - ys) + xs + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			input.GetAt(c, r, 0) = B;
-			input.GetAt(c, r, 1) = G;
-			input.GetAt(c, r, 2) = R;
-		}
-	}
 }

@@ -4,37 +4,28 @@
 #include <map>
 #include "MyImage.h"
 
-#ifndef __POINT__
-#define __POINT__
-struct Point {
-	int x;
-	int y;
-};
-#endif
-
 class MeanShift
 {
 private:
 	int pastPoint = 0;
 	Point localCenter;
+	int width;
+	int height;
 
 	int featureColorSize;
 	bool isSetFeatureColor;
 	std::vector<int> featureColor;
 
 public:
-	MeanShift(Point, int);
+	MeanShift(Point, Point, int);
 	~MeanShift();
 
-	void tracking(CByteImage& originColorImage);
-	void setFeatureColor(CByteImage& m_imageIn, Point start, Point end);
+	bool tracking(CByteImage& originColorImage);
+	void setFeatureColor(CByteImage& m_imageIn);
 
 	int checkPointX(int);
 	int checkPointY(int);
 
 	bool getIsSetFeatureColor();
-
-	void DrawLine(CByteImage& input, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B);
-
 };
 

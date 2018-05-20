@@ -20,7 +20,7 @@ public:
 	MeanShift(Point, Point, int);
 	~MeanShift();
 
-	void tracking(CByteImage& originColorImage);
+	bool tracking(CByteImage& originColorImage);
 	void setFeatureColor(CByteImage& m_imageIn);
 
 	int checkPointX(int);

@@ -26,7 +26,7 @@ MeanShift::~MeanShift()
 }
 
 
-void MeanShift::tracking(CByteImage & originColorImage)
+bool MeanShift::tracking(CByteImage & originColorImage)
 {
 	CDoubleImage m_imageHSVAdj = RGB2HSV(originColorImage);
 	CByteImage imageIn = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
@@ -79,9 +79,9 @@ void MeanShift::tracking(CByteImage & originColorImage)
 		endRow = rangeY * 2 + startRow;
 		endCol = rangeX * 2 + startCol;
 
-		for (int r = startRow; r < endRow; r++)
+		for (int r = startRow; r < endRow; r+=2)
 		{
-			for (int c = startCol; c < endCol; c++)
+			for (int c = startCol; c < endCol; c+=2)
 			{
 				t = yoloVideo[r][c];
 				if (t == -1) {
@@ -116,9 +116,12 @@ void MeanShift::tracking(CByteImage & originColorImage)
 
 	bool isCheckFrequency = true; // !(0.75 <= checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2) * arrayLength) && checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2)*arrayLength) <= 1.2);
 
-	if (isCheckFrequency && sum > 200) {
+	if (isCheckFrequency && sum > (this->width * this->height)*0.7) {
 		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
 		this->localCenter.y = checkPointY(this->localCenter.y - (move[maxIndex]->y + s) * repeat);
+	}
+	else {
+		return false;
 	}
 
 	pastPoint = checkArea[maxIndex];
@@ -141,6 +144,7 @@ void MeanShift::tracking(CByteImage & originColorImage)
 
 	ShowImage(originColorImage, "mmm");
 
+	return true;
 }
 
 void MeanShift::setFeatureColor(CByteImage & m_imageIn)

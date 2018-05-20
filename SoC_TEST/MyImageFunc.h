@@ -619,6 +619,8 @@ CMyImage<T1> operator/(const CMyImage<T1>& src, const T2 val)
 	return ret;
 }
 
+void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B);
+
 // 논리 연산자 선언
 void ANDImage(const CByteImage& src1, const CByteImage& src2, CByteImage& dst);
 CByteImage operator&(const CByteImage& src1, const CByteImage& src2);

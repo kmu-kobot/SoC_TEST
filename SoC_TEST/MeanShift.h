@@ -4,10 +4,13 @@
 #include <map>
 #include "MyImage.h"
 
+#ifndef __POINT__
+#define __POINT__
 struct Point {
 	int x;
 	int y;
 };
+#endif
 
 class MeanShift
 {

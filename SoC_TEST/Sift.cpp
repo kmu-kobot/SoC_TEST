@@ -785,69 +785,19 @@ void CSift::descriptKey()
 //		}
 	}
 }
-
-void DrawLine(CByteImage& canvas, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
-{
-	ASSERT(canvas.GetChannel() == 3);
-
-	int xs, ys, xe, ye;
-	if (x1 == x2)
-	{
-		if (y1 < y2) { ys = y1; ye = y2; }
-		else { ys = y2; ye = y1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			canvas.GetAt(x1, r, 0) = B;
-			canvas.GetAt(x1, r, 1) = G;
-			canvas.GetAt(x1, r, 2) = R;
-		}
-		return;
-	}
-
-	double a = (double)(y2 - y1) / (x2 - x1);
-	int nHeight = canvas.GetHeight();
-
-	if ((a>-1) && (a<1))
-	{
-		if (x1 < x2) { xs = x1; xe = x2; ys = y1; ye = y2; }
-		else { xs = x2; xe = x1; ys = y2; ye = y1; }
-		for (int c = xs; c <= xe; c++)
-		{
-			int r = (int)(a*(c - xs) + ys + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			canvas.GetAt(c, r, 0) = B;
-			canvas.GetAt(c, r, 1) = G;
-			canvas.GetAt(c, r, 2) = R;
-		}
-	}
-	else
-	{
-		double invA = 1.0 / a;
-		if (y1 < y2) { ys = y1; ye = y2; xs = x1; xe = x2; }
-		else { ys = y2; ye = y1; xs = x2; xe = x1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			int c = (int)(invA*(r - ys) + xs + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			canvas.GetAt(c, r, 0) = B;
-			canvas.GetAt(c, r, 1) = G;
-			canvas.GetAt(c, r, 2) = R;
-		}
-	}
-}
+//not checked
 
 void CSift::keyMatching()
 {
 	feature_t* nearest;
-	int cnt[NUM_SAMPLE];
-	int best = 0;
-
-	memset(cnt, 0, NUM_SAMPLE * sizeof(int));
+	if (matched < 0 || matched >= NUM_SAMPLE)
+	{
+		matched = 0;
+	}
 
 	for(int i = 0; i < NUM_SAMPLE; ++i)
 	{
+		feature_matched[i].clear();
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); itr++)
 		{
 			itr->minDist1 = itr->minDist2 = FLT_MAX;
@@ -881,20 +831,20 @@ void CSift::keyMatching()
 
 		for (itr = feature_sample[i].begin(); itr != feature_sample[i].end(); ++itr)
 		{
-			if (itr->minDist1 < itr->minDist2 * DIST_THRES)
+			if (itr->minDist1 < itr->minDist2 * DIST_THRES && itr->nearest->nearest == &*itr)
 			{
-				++cnt[i];
+				feature_matched[i].push_back(*itr);
 			}
 		}
 
-		if ((float)cnt[best] / (float)feature_sample[i].size() < (float)cnt[i] / (float)feature_sample[i].size())
+		if ((float)feature_matched[matched].size() / (float)feature_sample[matched].size() < (float)feature_matched[i].size() / (float)feature_sample[i].size())
 		{
-			best = i;
+			matched = i;
 		}
 	}
 
 	CByteImage& imageIn = m_imageIn.GetChannel() == 3 ? m_imageIn : Gray2RGB(m_imageIn);
-	CByteImage& imageCmp = m_imageCmp[best].GetChannel() == 3 ? m_imageCmp[best] : Gray2RGB(m_imageCmp[best]);
+	CByteImage& imageCmp = m_imageCmp[matched].GetChannel() == 3 ? m_imageCmp[matched] : Gray2RGB(m_imageCmp[matched]);
 
 	int wstep = imageIn.GetWStep();
 	int width_Cmp = imageCmp.GetWidth();
@@ -930,20 +880,15 @@ void CSift::keyMatching()
 		memcpy(m_imageOutV.GetPtr(r), imageCmp.GetPtr(r), wstep_Cmp * sizeof(BYTE));
 	}
 
-	for (itr = feature_sample[best].begin(); itr != feature_sample[best].end(); itr++)
+	for (itr = feature_matched[matched].begin(); itr != feature_matched[matched].end(); itr++)
 	{
-#ifdef KDTREE
-		if (itr->nearest == NULL)
-			continue;
-#endif
 		nearest = itr->nearest;
-		if (itr->minDist1 < itr->minDist2 * DIST_THRES)
-		{
-			DrawLine(m_imageOutH, itr->nx, itr->ny,
-				nearest->nx + width_Cmp, nearest->ny, 255, 0, 0);
-			DrawLine(m_imageOutV, itr->nx, itr->ny,
-				nearest->nx, nearest->ny + height_Cmp, 255, 0, 0);
-		}
+			
+		DrawLine(m_imageOutH, itr->nx, itr->ny,
+			nearest->nx + width_Cmp, nearest->ny, 255, 0, 0);
+
+		DrawLine(m_imageOutV, itr->nx, itr->ny,
+			nearest->nx, nearest->ny + height_Cmp, 255, 0, 0);
 	}
 	ShowImage(m_imageOutH, "H");
 	ShowImage(m_imageOutV, "V");
@@ -955,7 +900,63 @@ void CSift::copyCmp(int i)
 	feature_sample[i].resize(feature.size());
 	std::copy(feature.begin(), feature.end(), feature_sample[i].begin());
 }
-//not checked
+
+void CSift::getObjectArea(Point& leftTop, Point& rightBottom)
+{
+	std::unordered_map<__int64, CntPoint> hist;
+	int x, y;
+	float theta, sinTheta, cosTheta;
+	__int64 key;
+	for (itr = feature_matched[matched].begin(); itr != feature_matched[matched].end(); ++itr)
+	{
+		theta = itr->nearest->orientation - itr->orientation;
+		sinTheta = sinf(theta);
+		cosTheta = cosf(theta);
+		x = itr->nearest->nx - cosTheta * itr->nx + sinTheta * itr->ny;
+		y = itr->nearest->ny + sinTheta * itr->nx - cosTheta * itr->ny;
+
+		key = x << 30;
+		key |= y >> 2;
+		if (hist.find(key) == hist.end())
+		{
+			hist[key] = CntPoint{ x, y, 1 };
+		}
+		else
+		{
+			hist[key].x += x;
+			hist[key].y += y;
+			++hist[key].cnt;
+		}
+	}
+
+	int max = INT_MIN;
+	for (std::unordered_map<__int64, CntPoint>::iterator it = hist.begin(); it != hist.end(); ++it)
+	{
+		if (max < it->second.cnt)
+		{
+			key = it->first;
+			max = it->second.cnt;
+		}
+	}
+
+	leftTop.x = IN_IMG(hist[key].x / hist[key].cnt, 0, m_imageIn.GetWidth() - 1);
+	leftTop.y = IN_IMG(hist[key].y / hist[key].cnt, 0, m_imageIn.GetHeight() - 1);
+
+	rightBottom.x = IN_IMG(leftTop.x + m_imageCmp[matched].GetWidth() - 1, 0, m_imageIn.GetWidth() - 1);
+	rightBottom.y = IN_IMG(leftTop.y + m_imageCmp[matched].GetHeight() - 1, 0, m_imageIn.GetHeight() - 1);
+
+	DrawLine(m_imageOut, leftTop.x, leftTop.y,
+		rightBottom.x, leftTop.y, 255, 0, 0);
+	DrawLine(m_imageOut, leftTop.x, leftTop.y,
+		leftTop.x, rightBottom.y, 255, 0, 0);
+	DrawLine(m_imageOut, rightBottom.x, leftTop.y,
+		rightBottom.x, rightBottom.y, 255, 0, 0);
+	DrawLine(m_imageOut, leftTop.x, rightBottom.y,
+		rightBottom.x, rightBottom.y, 255, 0, 0);
+
+	ShowImage(m_imageOut, "area");
+
+}
 
 void CSift::image2xB2F(CByteImage& src, CFloatImage& dst)
 {

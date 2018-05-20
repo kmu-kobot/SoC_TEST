@@ -2,12 +2,20 @@
 #include "MeanShift.h"
 #include "MyImageFunc.h"
 #include "ImageFrameWndManager.h"
+#include <math.h>
 
 
-MeanShift::MeanShift(Point p, int fs)
+MeanShift::MeanShift(Point leftTop, Point rightBottom, int fs)
 {
 	this->pastPoint = 0;
-	this->localCenter = p;
+	this->localCenter = {
+		(rightBottom.x + leftTop.x) / 2,
+		(rightBottom.y + leftTop.y) / 2
+	};
+
+	this->width = rightBottom.x - leftTop.x;
+	this->height = rightBottom.y - leftTop.y;
+
 	this->featureColorSize = fs;
 	this->isSetFeatureColor = false;
 }
@@ -33,7 +41,7 @@ void MeanShift::tracking(CByteImage & originColorImage)
 	int nWidth = imageIn.GetWidth();//640
 	int nHeight = imageIn.GetHeight();//480
 
-	int rangeX = 40, rangeY = 40;
+	int rangeX = this->width / 2, rangeY = this->height / 2;
 
 	int color;
 	int checkArea[8] = { 1,1,1,1,1,1,1,1 };
@@ -135,8 +143,18 @@ void MeanShift::tracking(CByteImage & originColorImage)
 
 }
 
-void MeanShift::setFeatureColor(CByteImage & m_imageIn, Point start, Point end)
+void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 {
+	Point start = {
+		this->localCenter.x - this->width / 2,
+		this->localCenter.y - this->height / 2
+	};
+
+	Point end = {
+		this->localCenter.x + this->width / 2,
+		this->localCenter.y + this->height / 2
+	};
+
 	std::map<long, int> m;
 	std::map<int, std::vector<int>> result;
 	bool chk = false;

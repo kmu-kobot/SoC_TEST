@@ -4,14 +4,6 @@
 #include <map>
 #include "MyImage.h"
 
-#ifndef __POINT__
-#define __POINT__
-struct Point {
-	int x;
-	int y;
-};
-#endif
-
 class MeanShift
 {
 private:
@@ -33,8 +25,5 @@ public:
 	int checkPointY(int);
 
 	bool getIsSetFeatureColor();
-
-	void DrawLine(CByteImage& input, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B);
-
 };
 

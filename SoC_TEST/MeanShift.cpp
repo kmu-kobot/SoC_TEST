@@ -121,13 +121,13 @@ void MeanShift::tracking(CByteImage & originColorImage)
 	int width = 1;
 	for (int i = -width; i < width; i++) {
 		for (int j = -width; j < width; j++) {
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
 
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			this->DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
 		}
 	}
 
@@ -143,8 +143,8 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn, Point start, Point end)
 
 	CDoubleImage m_imageHSVAdj = RGB2HSV(m_imageIn);
 
-	this->DrawLine(m_imageIn, 160, 120, 160, 180, 255, 0, 0);
-	this->DrawLine(m_imageIn, 160, 120, 220, 120, 255, 0, 0);
+	DrawLine(m_imageIn, 160, 120, 160, 180, 255, 0, 0);
+	DrawLine(m_imageIn, 160, 120, 220, 120, 255, 0, 0);
 	ShowImage(m_imageIn, "target");
 
 	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
@@ -246,56 +246,4 @@ int MeanShift::checkPointY(int p)
 bool MeanShift::getIsSetFeatureColor()
 {
 	return this->isSetFeatureColor;
-}
-
-void MeanShift::DrawLine(CByteImage & input, int x1, int y1, int x2, int y2, BYTE R, BYTE G, BYTE B)
-{
-	ASSERT(input.GetChannel() == 3);
-
-	int xs, ys, xe, ye;
-	if (x1 == x2) // 수직선
-	{
-		if (y1 < y2) { ys = y1; ye = y2; }
-		else { ys = y2; ye = y1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			input.GetAt(x1, r, 0) = B;
-			input.GetAt(x1, r, 1) = G;
-			input.GetAt(x1, r, 2) = R;
-		}
-		return;
-	}
-
-	double a = (double)(y2 - y1) / (x2 - x1); // 기울기
-	int nHeight = input.GetHeight();
-
-	if ((a>-1) && (a<1)) // 가로축에 가까움
-	{
-		if (x1 < x2) { xs = x1; xe = x2; ys = y1; ye = y2; }
-		else { xs = x2; xe = x1; ys = y2; ye = y1; }
-		for (int c = xs; c <= xe; c++)
-		{
-			int r = (int)(a*(c - xs) + ys + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			input.GetAt(c, r, 0) = B;
-			input.GetAt(c, r, 1) = G;
-			input.GetAt(c, r, 2) = R;
-		}
-	}
-	else // 세로축에 가까움
-	{
-		double invA = 1.0 / a;
-		if (y1 < y2) { ys = y1; ye = y2; xs = x1; xe = x2; }
-		else { ys = y2; ye = y1; xs = x2; xe = x1; }
-		for (int r = ys; r <= ye; r++)
-		{
-			int c = (int)(invA*(r - ys) + xs + 0.5);
-			if (r<0 || r >= nHeight)
-				continue;
-			input.GetAt(c, r, 0) = B;
-			input.GetAt(c, r, 1) = G;
-			input.GetAt(c, r, 2) = R;
-		}
-	}
 }

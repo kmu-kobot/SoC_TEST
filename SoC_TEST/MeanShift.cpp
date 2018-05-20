@@ -9,8 +9,8 @@ MeanShift::MeanShift(Point leftTop, Point rightBottom, int fs)
 {
 	this->pastPoint = 0;
 	this->localCenter = {
-		(rightBottom.x + leftTop.x) / 2,
-		(rightBottom.y + leftTop.y) / 2
+		((rightBottom.x + leftTop.x) + 320) / 2,
+		((rightBottom.y + leftTop.y) + 240) / 2
 	};
 
 	this->width = rightBottom.x - leftTop.x;
@@ -146,13 +146,13 @@ void MeanShift::tracking(CByteImage & originColorImage)
 void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 {
 	Point start = {
-		this->localCenter.x - this->width / 2,
-		this->localCenter.y - this->height / 2
+		this->localCenter.x - (this->width / 2),
+		this->localCenter.y - (this->height / 2)
 	};
 
 	Point end = {
-		this->localCenter.x + this->width / 2,
-		this->localCenter.y + this->height / 2
+		this->localCenter.x + (this->width / 2),
+		this->localCenter.y + (this->height / 2)
 	};
 
 	std::map<long, int> m;
@@ -161,8 +161,8 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 
 	CDoubleImage m_imageHSVAdj = RGB2HSV(m_imageIn);
 
-	DrawLine(m_imageIn, 160, 120, 160, 180, 255, 0, 0);
-	DrawLine(m_imageIn, 160, 120, 220, 120, 255, 0, 0);
+	DrawLine(m_imageIn, start.x, start.y, end.x, end.y, 255, 0, 0);
+	DrawLine(m_imageIn, end.x, start.y, start.x, end.y, 255, 0, 0);
 	ShowImage(m_imageIn, "target");
 
 	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
@@ -237,27 +237,27 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 
 int MeanShift::checkPointX(int p)
 {
-	if (5 <= p && p <= 315) {
+	if (5 <= p && p <= 638) {
 		return p;
 	}
 	else if (5 > p) {
 		return 5;
 	}
 	else {
-		return 314;
+		return 637;
 	}
 }
 
 int MeanShift::checkPointY(int p)
 {
-	if (3 <= p && p <= 237) {
+	if (3 <= p && p <= 478) {
 		return p;
 	}
 	else if (3 > p) {
 		return 3;
 	}
 	else {
-		return 236;
+		return 477;
 	}
 }
 

@@ -787,8 +787,10 @@ void CSift::descriptKey()
 }
 //not checked
 
-void CSift::keyMatching()
+bool CSift::keyMatching()
 {
+	float max = FLT_MIN;
+	float matchingRatio;
 	feature_t* nearest;
 	if (matched < 0 || matched >= NUM_SAMPLE)
 	{
@@ -837,10 +839,17 @@ void CSift::keyMatching()
 			}
 		}
 
-		if ((float)feature_matched[matched].size() / (float)feature_sample[matched].size() < (float)feature_matched[i].size() / (float)feature_sample[i].size())
+		matchingRatio = (float)feature_matched[i].size() / (float)feature_sample[i].size();
+		if (max < matchingRatio)
 		{
+			max = matchingRatio;
 			matched = i;
 		}
+	}
+
+	if (max < MATCHING_THRES)
+	{
+		return FALSE;
 	}
 
 	CByteImage& imageIn = m_imageIn.GetChannel() == 3 ? m_imageIn : Gray2RGB(m_imageIn);
@@ -892,6 +901,8 @@ void CSift::keyMatching()
 	}
 	ShowImage(m_imageOutH, "H");
 	ShowImage(m_imageOutV, "V");
+
+	return TRUE;
 }
 
 void CSift::copyCmp(int i)

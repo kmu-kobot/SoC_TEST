@@ -33,7 +33,7 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 	CByteImage TestImage = imageIn;
 
 	Point move[][2] = {
-		{ 0, 1 },{ 1, 1 },{ 1, 0 },{ 1, -1 },{ 0, -1 },{ -1, -1 },{ -1, 0 },{ -1, 1 }
+		{ 0, 1 },{ 1, 1 },{ 1, 0 },{ 1, -1 },{ 0, -1 },{ -1, -1 },{ -1, 0 },{ -1, 1 },{ 0, 0 }
 	};
 
 	int repeat = 5;
@@ -44,16 +44,19 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 	int rangeX = this->width / 2, rangeY = this->height / 2;
 
 	int color;
-	int checkArea[8] = { 1,1,1,1,1,1,1,1 };
+	int checkArea[9] = { 1,1,1,1,1,1,1,1,1 };
 
-	int **yoloVideo = new int*[rangeY * 2 + repeat * 2];
-	for (int i = 0; i < rangeY * 2 + repeat * 2; i++) {
-		yoloVideo[i] = new int[rangeX * 2 + repeat * 2];
-		memset(yoloVideo[i], -1, sizeof(int)*(rangeX * 2 + repeat * 2));
+	int **yoloVideo = NULL;
+	int sizeY = rangeY * 2 + repeat * 2;
+	int sizeX = rangeX * 2 + repeat * 2;
+	yoloVideo = new int*[sizeY];
+	for (int i = 0; i < sizeY; i++) {
+		yoloVideo[i] = new int[sizeX];
+		memset(yoloVideo[i], -1, sizeof(int)*(sizeX));
 	}
 
-	int startRow = this->localCenter.y - rangeY - repeat, startCol = this->localCenter.x - rangeX - repeat;
-	int endRow = this->localCenter.y + rangeY + repeat, endCol = this->localCenter.x + rangeX + repeat;
+	int startRow = this->localCenter.y - sizeY / 2, startCol = this->localCenter.x - sizeX / 2;
+	int endRow = this->localCenter.y + sizeY / 2, endCol = this->localCenter.x + sizeX / 2;
 
 	for (int r = startRow; r < endRow; r++) {
 		BYTE *pIn;
@@ -66,12 +69,11 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 				yoloVideo[r - startRow][c - startCol] = color;
 			}
 		}
-
 	}
 
 	int tmpColor, t;
 
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 9; i++) {
 
 		startRow = (1 - move[i]->y) * repeat;
 		startCol = (1 + move[i]->x) * repeat;
@@ -90,7 +92,7 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 				for (int k = 0; k < this->featureColorSize; k++)
 				{
 					tmpColor = this->featureColor.at(k);
-					if (t - 10 <= tmpColor && tmpColor <= t + 10) {
+					if (t - 15 <= tmpColor && tmpColor <= t + 15) {
 						checkArea[i] += 1;
 					}
 				}
@@ -98,53 +100,54 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 		}
 	}
 
-	for (int i = 0; i < rangeY * 2 + repeat * 2; i++) {
+	for (int i = 0; i < sizeY; i++) {
 		delete[] yoloVideo[i];
 	}
 
 	delete[] yoloVideo;
 
-	int maxIndex = 0, sum = 0;
-	for (int i = 0; i < 8; i++) {
-		sum += checkArea[i];
-		if (checkArea[maxIndex] < checkArea[i]) {
+	int maxIndex = 0, minIndex = 0;
+	for (int i = 0; i < 9; i++) {
+		if (checkArea[maxIndex] <= checkArea[i]) {
 			maxIndex = i;
 		}
-	}
-
-	int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
-
-	bool isCheckFrequency = true; // !(0.75 <= checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2) * arrayLength) && checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2)*arrayLength) <= 1.2);
-	bool flag = true; // (checkArea[maxIndex] / (this->width * this->height) * 100) >= 8;
-	if (isCheckFrequency && flag) {
-		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
-		this->localCenter.y = checkPointY(this->localCenter.y - (move[maxIndex]->y + s) * repeat);
-	}
-	else {
-		return false;
-	}
-
-	pastPoint = checkArea[maxIndex];
-
-	// sprintf_s(hsvValue, "[DIR] => %d, %d\t\n", maxIndex, checkArea[maxIndex]);
-	// OutputDebugString(hsvValue);
-	
-	int width = 1;
-	for (int i = -width; i < width; i++) {
-		for (int j = -width; j < width; j++) {
-			DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
-
-			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
-			DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
-			DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+		if (checkArea[minIndex] >= checkArea[i]) {
+			minIndex = i;
 		}
 	}
 
-	ShowImage(originColorImage, "mmm");
+	bool rFlag;
+	if ((checkArea[maxIndex] / (rangeX * rangeY * 4) * 100) <= 0.01) {
+		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 
-	return true;
+		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
+		this->localCenter.y = checkPointY(this->localCenter.y - (move[maxIndex]->y + s) * repeat);
+		pastPoint = checkArea[maxIndex];
+
+		int width = 1;
+		for (int i = -width; i < width; i++) {
+			for (int j = -width; j < width; j++) {
+				DrawLine(originColorImage, checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+				DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + j), 0, 255, 0);
+
+				DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y - rangeY + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+				DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + rangeY + j), 0, 255, 0);
+
+				DrawLine(originColorImage, checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x - rangeX + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+				DrawLine(originColorImage, checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y + rangeY + j), checkPointX(this->localCenter.x + rangeX + i), checkPointY(this->localCenter.y - rangeY + j), 0, 255, 0);
+
+			}
+		}
+
+		ShowImage(originColorImage, "mmm");
+
+		rFlag = true;
+	}
+	else {
+		rFlag = false;
+	}
+
+	return rFlag;
 }
 
 void MeanShift::setFeatureColor(CByteImage & m_imageIn)
@@ -226,11 +229,12 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 	for (iterResult = result.begin(); iterResult != result.end(); ++iterResult) {
 		for (int i = (*iterResult).second.size() - 1; i >= 0; i--) {
 			if ((*iterResult).second.at(i) != 0) {
-				if (rColor.size() <= this->featureColorSize) {
+				if ((int) rColor.size() <= this->featureColorSize) {
 					rColor.push_back((*iterResult).second.at(i));
 				}
 				else {
 					this->featureColor = rColor;
+					this->featureColorSize = rColor.size();
 					return;
 				}
 			}
@@ -238,6 +242,7 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 	}
 
 	this->featureColor = rColor;
+	this->featureColorSize = rColor.size();
 	return;
 }
 

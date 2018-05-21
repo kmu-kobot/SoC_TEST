@@ -22,8 +22,8 @@ CImageFrameWnd::CImageFrameWnd(const CByteImage &image, const char *name)
 	else
 		wndName.Format("Image view %d", nFrameWndCount);
 
-	CRect rect(30*nFrameWndCount, 30*nFrameWndCount, 
-		image.GetWidth()+20+30*nFrameWndCount, image.GetHeight()+60+30*nFrameWndCount);
+	CRect rect(30 * nFrameWndCount, 30 * nFrameWndCount,
+		image.GetWidth() + 20 + 30 * nFrameWndCount, image.GetHeight() + 60 + 30 * nFrameWndCount);
 	Create(NULL, wndName, WS_OVERLAPPEDWINDOW, rect);
 
 	nFrameWndCount++;
@@ -61,5 +61,5 @@ void CImageFrameWnd::PostNcDestroy()
 {
 	// TODO: Add your specialized code here and/or call the base class
 	gImageFrameWndManager.Delete(this);
-//	CFrameWnd::PostNcDestroy();
+	//	CFrameWnd::PostNcDestroy();
 }

@@ -35,7 +35,7 @@
 #define DES_RADIUS ((float)DES_SIZE / 2.0f)
 #define DES_SIGMA (DES_SIZE / 2)
 #define DIST_THRES (0.6f * 0.6f)
-#define MATCHING_THRES 0.05f
+#define MATCHING_THRES 0.1f
 #define KDTREE
 
 typedef struct CntPoint

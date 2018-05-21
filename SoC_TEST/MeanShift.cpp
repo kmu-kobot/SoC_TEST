@@ -9,8 +9,8 @@ MeanShift::MeanShift(Point leftTop, Point rightBottom, int fs)
 {
 	this->pastPoint = 0;
 	this->localCenter = {
-		((rightBottom.x + leftTop.x) + 320) / 2,
-		((rightBottom.y + leftTop.y) + 240) / 2
+		(rightBottom.x + leftTop.x) / 2,
+		(rightBottom.y + leftTop.y) / 2
 	};
 
 	this->width = rightBottom.x - leftTop.x;

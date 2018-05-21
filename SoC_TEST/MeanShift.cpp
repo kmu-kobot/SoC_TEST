@@ -29,7 +29,7 @@ MeanShift::~MeanShift()
 bool MeanShift::tracking(CByteImage & originColorImage)
 {
 	CDoubleImage m_imageHSVAdj = RGB2HSV(originColorImage);
-	CByteImage imageIn = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV·Î ¹Ù²Û°Í¿¡¼­ H¸¸µû³½°Í.
+	CByteImage imageIn = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSVë¡œ ë°”ê¾¼ê²ƒì—ì„œ Hë§Œë”°ë‚¸ê²ƒ.
 	CByteImage TestImage = imageIn;
 
 	Point move[][2] = {
@@ -117,7 +117,7 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 	}
 
 	bool rFlag;
-	if ((checkArea[maxIndex] / (rangeX * rangeY * 4) * 100) <= 0.01) {
+	if ((checkArea[maxIndex] / (rangeX * rangeY * 4) * 100) <= 97.5) {
 		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 
 		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
@@ -176,7 +176,7 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 	DrawLine(m_imageIn, end.x, start.y, start.x, end.y, 255, 0, 0);
 	ShowImage(m_imageIn, "target");
 
-	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV·Î ¹Ù²Û°Í¿¡¼­ H¸¸µû³½°Í.
+	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSVë¡œ ë°”ê¾¼ê²ƒì—ì„œ Hë§Œë”°ë‚¸ê²ƒ.
 
 	long value;
 

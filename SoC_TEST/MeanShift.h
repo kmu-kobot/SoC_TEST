@@ -9,8 +9,12 @@ class MeanShift
 private:
 	int pastPoint = 0;
 	Point localCenter;
+
 	int width;
 	int height;
+
+	int videoWidth;
+	int videoHeight;
 
 	int featureColorSize;
 	bool isSetFeatureColor;

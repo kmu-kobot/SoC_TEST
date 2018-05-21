@@ -11,7 +11,7 @@
 
 #define BOXBLUR
 #define VECTOR_NORM
-#define NUM_SAMPLE 3
+#define NUM_SAMPLE 5
 #define NUM_OCTAVE 4
 #define NUM_SCALE_SPACE_LEVEL 5
 #define NUM_SCALE_SPACE (NUM_SCALE_SPACE_LEVEL * NUM_OCTAVE)
@@ -35,7 +35,7 @@
 #define DES_RADIUS ((float)DES_SIZE / 2.0f)
 #define DES_SIGMA (DES_SIZE / 2)
 #define DIST_THRES (0.6f * 0.6f)
-#define MATCHING_THRES 0.1f
+#define MATCHING_THRES 0.05f
 #define KDTREE
 
 typedef struct CntPoint

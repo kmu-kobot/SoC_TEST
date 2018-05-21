@@ -12,6 +12,9 @@ private:
 	int width;
 	int height;
 
+	int videoWidth;
+	int videoHeight;
+
 	int featureColorSize;
 	bool isSetFeatureColor;
 	std::vector<int> featureColor;

@@ -115,8 +115,9 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 	int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 
 	bool isCheckFrequency = true; // !(0.75 <= checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2) * arrayLength) && checkArea[maxIndex] / ((rangeX * 2)*(rangeY * 2)*arrayLength) <= 1.2);
+	bool flag = true; // checkArea[maxIndex] > (this->width * this->height) * 0.7;
 
-	if (isCheckFrequency && sum > (this->width * this->height)*0.7) {
+	if (isCheckFrequency && flag) {
 		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);
 		this->localCenter.y = checkPointY(this->localCenter.y - (move[maxIndex]->y + s) * repeat);
 	}
@@ -149,6 +150,9 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 
 void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 {
+	this->videoHeight = m_imageIn.GetWidth();
+	this->videoWidth = m_imageIn.GetHeight();
+
 	Point start = {
 		this->localCenter.x - (this->width / 2),
 		this->localCenter.y - (this->height / 2)
@@ -222,11 +226,12 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 	for (iterResult = result.begin(); iterResult != result.end(); ++iterResult) {
 		for (int i = (*iterResult).second.size() - 1; i >= 0; i--) {
 			if ((*iterResult).second.at(i) != 0) {
-				if (rColor.size() <= this->featureColorSize) {
+				if (rColor.size() < this->featureColorSize) {
 					rColor.push_back((*iterResult).second.at(i));
 				}
 				else {
 					this->featureColor = rColor;
+					this->featureColorSize = rColor.size();
 					this->isSetFeatureColor = true;
 					return;
 				}
@@ -236,32 +241,33 @@ void MeanShift::setFeatureColor(CByteImage & m_imageIn)
 
 	this->featureColor = rColor;
 	this->isSetFeatureColor = true;
+	this->featureColorSize = rColor.size();
 	return;
 }
 
 int MeanShift::checkPointX(int p)
 {
-	if (5 <= p && p <= 638) {
+	if (5 <= p && p <= this->videoWidth - 3) {
 		return p;
 	}
 	else if (5 > p) {
 		return 5;
 	}
 	else {
-		return 637;
+		return videoWidth - 4;
 	}
 }
 
 int MeanShift::checkPointY(int p)
 {
-	if (3 <= p && p <= 478) {
+	if (3 <= p && p <= this->videoHeight - 3) {
 		return p;
 	}
 	else if (3 > p) {
 		return 3;
 	}
 	else {
-		return 477;
+		return videoHeight - 4;
 	}
 }
 

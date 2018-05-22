@@ -41,7 +41,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 		{ 0, 1 },{ 1, 1 },{ 1, 0 },{ 1, -1 },{ 0, -1 },{ -1, -1 },{ -1, 0 },{ -1, 1 },{ 0, 0 }
 	};
 
-	int repeat = 5;
+	int repeat = 3;
 
 	int nWidth = m_imageH.GetWidth();//640
 	int nHeight = m_imageH.GetHeight();//480
@@ -65,7 +65,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 	int startRow = this->localCenter.y - sizeY / 2, startCol = this->localCenter.x - sizeX / 2;
 	int endRow = this->localCenter.y + sizeY / 2, endCol = this->localCenter.x + sizeX / 2;
 
-	for (int r = startRow; r < endRow; r++) {
+	for (int r = startRow; r < endRow; r+=2) {
 		BYTE *pInH, *pInS, *pInV;
 		if (0 <= r && r <= nHeight) {
 			pInH = m_imageH.GetPtr(r);
@@ -74,7 +74,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 		}
 		else { continue; }
 
-		for (int c = startCol; c < endCol; c++) {
+		for (int c = startCol; c < endCol; c+=2) {
 			if (0 <= c && c <= nWidth) {
 				yoloVideo[r - startRow][c - startCol][0] = pInH[c];
 				yoloVideo[r - startRow][c - startCol][1] = pInS[c];
@@ -93,9 +93,9 @@ bool Tracking::tracking(CByteImage & originColorImage)
 		endRow = rangeY * 2 + startRow;
 		endCol = rangeX * 2 + startCol;
 
-		for (int r = startRow; r < endRow; r++)
+		for (int r = startRow; r < endRow; r+=2)
 		{
-			for (int c = startCol; c < endCol; c++)
+			for (int c = startCol; c < endCol; c+=2)
 			{
 				tH = yoloVideo[r][c][0];
 				tS = yoloVideo[r][c][1];
@@ -121,8 +121,8 @@ bool Tracking::tracking(CByteImage & originColorImage)
 					if (tV - 35 <= tmpV && tmpV <= tV + 35) {
 						cntFlag += 1;
 					}
-					if (cntFlag == 3) {
-						checkArea[i] += 1;
+					if (cntFlag == 2) {
+						checkArea[i] += cntFlag;
 					}
 				}
 			}
@@ -145,8 +145,8 @@ bool Tracking::tracking(CByteImage & originColorImage)
 		}
 	}
 
-	bool rFlag;
-	bool test = (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) <= 5;
+	bool rFlag = false;
+	bool test = (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) <= 3;
 	if (test) {
 		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 
@@ -210,9 +210,9 @@ void Tracking::setFeatureH(CByteImage & m_imageIn)
 
 	long value;
 
-	for (int r = start.x; r < end.x; r += 2) {
+	for (int r = start.x; r < end.x; r += 5) {
 		BYTE *pIn = m_imageH.GetPtr(r);
-		for (int c = start.y; c < end.y; c += 2) {
+		for (int c = start.y; c < end.y; c += 5) {
 			value = pIn[c];
 
 			chk = false;
@@ -298,9 +298,9 @@ void Tracking::setFeatureS(CByteImage & m_imageIn)
 
 	long value;
 
-	for (int r = start.x; r < end.x; r += 2) {
+	for (int r = start.x; r < end.x; r += 5) {
 		BYTE *pIn = m_imageS.GetPtr(r);
-		for (int c = start.y; c < end.y; c += 2) {
+		for (int c = start.y; c < end.y; c += 5) {
 			value = pIn[c];
 
 			chk = false;
@@ -387,9 +387,9 @@ void Tracking::setFeatureV(CByteImage & m_imageIn)
 
 	long value;
 
-	for (int r = start.x; r < end.x; r += 2) {
+	for (int r = start.x; r < end.x; r += 5) {
 		BYTE *pIn = m_imageV.GetPtr(r);
-		for (int c = start.y; c < end.y; c += 2) {
+		for (int c = start.y; c < end.y; c += 5) {
 			value = pIn[c];
 
 			chk = false;

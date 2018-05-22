@@ -107,8 +107,8 @@ bool Tracking::tracking(CByteImage & originColorImage)
 				for (int k = 0; k < this->featureHSize; k++)
 				{
 					tmpH = this->featureH.at(k);
-					tmpS = this->featureS.at(k);
-					tmpV = this->featureV.at(k);
+					tmpS = this->featureS.at((k >= this->featureSSize) ? (this->featureSSize-1) : k);
+					tmpV = this->featureV.at((k >= this->featureVSize) ? (this->featureVSize - 1) : k);
 
 					cntFlag = 0;
 
@@ -146,7 +146,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 	}
 
 	bool rFlag = false;
-	bool test = (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) <= 3;
+	bool test = true; // (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) >= 0;
 	if (test) {
 		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 

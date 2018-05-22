@@ -130,9 +130,11 @@ bool Tracking::tracking(CByteImage & originColorImage)
 	}
 
 	for (int i = 0; i < sizeY; i++) {
+		for (int j=0; j < sizeX; j++) {
+			delete[i][j];
+		}
 		delete[] yoloVideo[i];
 	}
-
 	delete[] yoloVideo;
 
 	int maxIndex = 0, minIndex = 0;
@@ -202,9 +204,9 @@ void Tracking::setFeatureH(CByteImage & m_imageIn)
 
 	CDoubleImage m_imageHSVAdj = RGB2HSV(m_imageIn);
 
-	DrawLine(m_imageIn, start.x, start.y, end.x, end.y, 255, 0, 0);
-	DrawLine(m_imageIn, end.x, start.y, start.x, end.y, 255, 0, 0);
-	ShowImage(m_imageIn, "target");
+	// DrawLine(m_imageIn, start.x, start.y, end.x, end.y, 255, 0, 0);
+	// DrawLine(m_imageIn, end.x, start.y, start.x, end.y, 255, 0, 0);
+	// ShowImage(m_imageIn, "target");
 
 	CByteImage m_imageH = (m_imageHSVAdj.GetChannelImg(2)*(255.0 / 360.0) + 0.5);//HSV로 바꾼것에서 H만따낸것.
 

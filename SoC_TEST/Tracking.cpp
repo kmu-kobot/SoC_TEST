@@ -121,7 +121,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 					if (tV - 35 <= tmpV && tmpV <= tV + 35) {
 						cntFlag += 1;
 					}
-					if (cntFlag == 2) {
+					if (cntFlag >= 2) {
 						checkArea[i] += cntFlag;
 					}
 				}
@@ -148,7 +148,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 	}
 
 	bool rFlag = false;
-	bool test = true; // (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) >= 0;
+	bool test = (rangeX != 0 && rangeY != 0);// true; // (checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) >= 0;
 	if (test) {
 		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 

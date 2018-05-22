@@ -117,7 +117,7 @@ bool MeanShift::tracking(CByteImage & originColorImage)
 	}
 
 	bool rFlag;
-	if ((checkArea[maxIndex] / (rangeX * rangeY * 4) * 100) <= 97.5) {
+	if ((checkArea[maxIndex] / (((rangeX == 0) ? 1 : rangeX) * ((rangeY == 0) ? 1 : rangeY) * 4) * 100) <= 97.5) {
 		int s = (pastPoint / checkArea[maxIndex] < 0.3) ? pastPoint / checkArea[maxIndex] * 100 * 2 : 0;
 
 		this->localCenter.x = checkPointX(this->localCenter.x + (move[maxIndex]->x + s) * repeat);

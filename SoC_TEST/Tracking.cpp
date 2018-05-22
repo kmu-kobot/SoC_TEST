@@ -131,7 +131,7 @@ bool Tracking::tracking(CByteImage & originColorImage)
 
 	for (int i = 0; i < sizeY; i++) {
 		for (int j=0; j < sizeX; j++) {
-			delete[i][j];
+			delete[] yoloVideo[i][j];
 		}
 		delete[] yoloVideo[i];
 	}

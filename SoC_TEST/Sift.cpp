@@ -168,13 +168,14 @@ void CSift::detectFeature(CByteImage imageIn, const char* name)
 {
 	m_imageIn = imageIn;
 	m_imageInGray = imageIn.GetChannel() == 1 ? imageIn : RGB2Gray(imageIn);
+	m_imageOut = m_imageIn;
 	buildScaleSpace();
 	//showScaleSpace();
 	buildDOG();
 	//showDOG();
 	buildFeature();
 	accurateKey();
-	showFeature(name);
+	//showFeature(name);
 	buildGradient();
 	assignOrientation();
 	descriptKey();
@@ -283,7 +284,6 @@ void CSift::buildFeature()
 void CSift::showFeature(const char* name)
 {
 	static int width, height;
-	m_imageOut = m_imageIn;
 	width = m_imageIn.GetWidth();
 	height = m_imageIn.GetHeight();
 	for (itr = feature.begin(); itr != feature.end(); ++itr)

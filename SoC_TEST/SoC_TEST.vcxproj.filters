@@ -63,7 +63,7 @@
     <ClInclude Include="Feature.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MeanShift.h">
+    <ClInclude Include="Tracking.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,7 +107,7 @@
     <ClCompile Include="Feature.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="MeanShift.cpp">
+    <ClCompile Include="Tracking.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
